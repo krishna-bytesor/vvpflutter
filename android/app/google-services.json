@@ -1,0 +1,117 @@
+{
+  "project_info": {
+    "project_number": "687598630474",
+    "firebase_url": "https://vvp-swami-a787a-default-rtdb.firebaseio.com",
+    "project_id": "vvp-swami-a787a",
+    "storage_bucket": "vvp-swami-a787a.firebasestorage.app"
+  },
+  "client": [
+
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:687598630474:android:d4e9ffa7efb7bed45818b3",
+        "android_client_info": {
+          "package_name": "com.vvpsmedia"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "687598630474-lfcpgvlr33sp921rbtntfgur424jpbf5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.vvpsmedia",
+            "certificate_hash": "9bbb3186b2189ef16d8f272bdab59362c395cbb4"
+          }
+        },
+        {
+          "client_id": "687598630474-shv0mcgclrnp5ldc523occp1556neoep.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.vvpsmedia",
+            "certificate_hash": "c5b64ec35074b997f7c23133eef2a4d6a69956ea"
+          }
+        },
+        {
+          "client_id": "687598630474-3bs04o1vupjg8qcqu39obrh1v1bbotfc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBqCJbalFVilZ7uS3oze1tnrunWK5G75hQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "687598630474-3bs04o1vupjg8qcqu39obrh1v1bbotfc.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "687598630474-9qa3etu7jgq6sq0mkthusml1p4735eg3.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.vvpsmedia"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:687598630474:android:d4c7c95ff0f0d1055818b3",
+        "android_client_info": {
+          "package_name": "com.vvpswami"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "687598630474-330mf38tf0cpvt75e7pgn783l2c793fg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.vvpswami",
+            "certificate_hash": "c5b64ec35074b997f7c23133eef2a4d6a69956ea"
+          }
+        },
+        {
+          "client_id": "687598630474-kkpeo7tapiqdg60e0tpci90s5g5gvqv3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.vvpswami",
+            "certificate_hash": "9bbb3186b2189ef16d8f272bdab59362c395cbb4"
+          }
+        },
+        {
+          "client_id": "687598630474-3bs04o1vupjg8qcqu39obrh1v1bbotfc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBqCJbalFVilZ7uS3oze1tnrunWK5G75hQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "687598630474-3bs04o1vupjg8qcqu39obrh1v1bbotfc.apps.googleusercontent.com",
+              "client_type": 3
+            },
+
+            {
+              "client_id": "687598630474-9qa3etu7jgq6sq0mkthusml1p4735eg3.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.vvpsmedia"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
