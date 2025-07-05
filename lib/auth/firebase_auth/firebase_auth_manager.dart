@@ -300,10 +300,10 @@ class FirebaseAuthManager extends AuthManager
   /// Tries to sign in or create an account using Firebase Auth.
   /// Returns the User object if sign in was successful.
   Future<BaseAuthUser?> _signInOrCreateAccount(
-    BuildContext context,
-    Future<UserCredential?> Function() signInFunc,
-    String authProvider,
-  ) async {
+      BuildContext context,
+      Future<UserCredential?> Function() signInFunc,
+      String authProvider,
+      ) async {
     try {
       final userCredential = await signInFunc();
       logFirebaseAuthEvent(userCredential?.user, authProvider);
@@ -314,18 +314,20 @@ class FirebaseAuthManager extends AuthManager
           ? null
           : VVPSwamiFirebaseUser.fromUserCredential(userCredential);
     } on FirebaseAuthException catch (e) {
-      final errorMsg = switch (e.code) {
-        'email-already-in-use' =>
-          'Error: The email is already in use by a different account',
-        'INVALID_LOGIN_CREDENTIALS' =>
-          'Error: The supplied auth credential is incorrect, malformed or has expired',
-        _ => 'Error: ${e.message!}',
-      };
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMsg)),
-      );
+      String? errorMsg;
+      if (e.code == 'email-already-in-use') {
+        errorMsg = 'Error: The email is already in use by a different account';
+      }
+
+      if (errorMsg != null) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMsg)),
+        );
+      }
+
       return null;
     }
   }
+
 }

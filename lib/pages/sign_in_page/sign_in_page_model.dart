@@ -12,6 +12,8 @@ class SignInPageModel extends FlutterFlowModel<SignInPageWidget> {
 
   bool apple = false;
 
+  bool isLoading = false;
+
   ///  State fields for stateful widgets in this page.
 
   final formKey = GlobalKey<FormState>();

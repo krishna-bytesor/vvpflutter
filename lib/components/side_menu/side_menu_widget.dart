@@ -560,7 +560,7 @@ class _SideMenuWidgetState extends State<SideMenuWidget> {
                       ),
                     ),
                     SizedBox(
-                      height: 10,
+                      height: 20,
                     ),
                     Padding(
                       padding:

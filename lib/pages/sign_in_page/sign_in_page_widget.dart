@@ -581,7 +581,7 @@ class _SignInPageWidgetState extends State<SignInPageWidget> {
                             focusColor: Colors.transparent,
                             hoverColor: Colors.transparent,
                             highlightColor: Colors.transparent,
-                            onTap: () async {
+                            onTap: _model.isLoading ? null : () async {
                               logFirebaseEvent(
                                   'SIGN_IN_Container_jw2o9sdp_ON_TAP');
                               logFirebaseEvent('Container_validate_form');
@@ -591,18 +591,9 @@ class _SignInPageWidgetState extends State<SignInPageWidget> {
                                 safeSetState(() => _model.form = false);
                                 return;
                               }
-                              logFirebaseEvent('Container_auth');
-                              GoRouter.of(context).prepareAuthEvent();
-
-                              final user = await authManager.signInWithEmail(
-                                context,
-                                _model.emailTextController.text,
-                                _model.passwordTextController.text,
-                              );
-                              if (user == null) {
-                                return;
-                              }
-
+                              
+                              // Set loading state
+                              safeSetState(() => _model.isLoading = true);
                               logFirebaseEvent('Container_backend_call');
                               _model.login = await LaravelGroup.loginCall.call(
                                 email: _model.emailTextController.text,
@@ -620,21 +611,55 @@ class _SignInPageWidgetState extends State<SignInPageWidget> {
                                   (_model.login?.jsonBody ?? ''),
                                 );
                                 safeSetState(() {});
+                                
+                                // Try Firebase authentication after successful Laravel login
+                                try {
+                                  logFirebaseEvent('Container_auth');
+                                  GoRouter.of(context).prepareAuthEvent();
+                                  
+                                  final user = await authManager.signInWithEmail(
+                                    context,
+                                    _model.emailTextController.text,
+                                    _model.passwordTextController.text,
+                                  );
+                                  
+                                  if (user != null) {
+                                    print('Firebase authentication successful');
+                                  } else {
+                                    print('Firebase authentication failed, but Laravel login successful');
+                                    // Continue anyway since Laravel authentication succeeded
+                                  }
+                                } catch (e) {
+                                  print('Firebase authentication error: $e');
+                                  // Continue anyway since Laravel authentication succeeded
+                                }
+                                
                                 logFirebaseEvent('Container_navigate_to');
-
                                 context.goNamedAuth(
                                     HomePageWidget.routeName, context.mounted);
                               } else {
                                 logFirebaseEvent('Container_alert_dialog');
+                                String errorMessage = 'Login failed. Please check your credentials.';
+                                
+                                try {
+                                  final message = getJsonField(
+                                    (_model.login?.jsonBody ?? ''),
+                                    r'''$.message''',
+                                  );
+                                  if (message != null && message.toString().isNotEmpty) {
+                                    errorMessage = message.toString();
+                                  }
+                                } catch (e) {
+                                  print('Error parsing login response: $e');
+                                }
+                                
                                 await showDialog(
                                   context: context,
                                   builder: (alertDialogContext) {
                                     return WebViewAware(
                                       child: AlertDialog(
-                                        content: Text(getJsonField(
-                                          (_model.login?.jsonBody ?? ''),
-                                          r'''$.message''',
-                                        ).toString()),
+                                        title: Text('Login Error'),
+                                        content: Text(errorMessage),
                                         actions: [
                                           TextButton(
                                             onPressed: () => Navigator.pop(
@@ -649,6 +674,9 @@ class _SignInPageWidgetState extends State<SignInPageWidget> {
                               }
 
                               safeSetState(() {});
+                              
+                              // Reset loading state
+                              safeSetState(() => _model.isLoading = false);
                             },
                             child: Container(
                               width: double.infinity,
@@ -663,29 +691,38 @@ class _SignInPageWidgetState extends State<SignInPageWidget> {
                               ),
                               child: Align(
                                 alignment: AlignmentDirectional(0.0, 0.0),
-                                child: Text(
-                                  FFLocalizations.of(context).getText(
-                                    'yufaecww' /* Sign In */,
-                                  ),
-                                  style: FlutterFlowTheme.of(context)
-                                      .bodyMedium
-                                      .override(
-                                        font: GoogleFonts.poppins(
-                                          fontWeight: FontWeight.w600,
-                                          fontStyle:
-                                              FlutterFlowTheme.of(context)
+                                child: _model.isLoading
+                                    ? SizedBox(
+                                        width: 24,
+                                        height: 24,
+                                        child: CircularProgressIndicator(
+                                          color: Color(0xFF232323),
+                                          strokeWidth: 2.0,
+                                        ),
+                                      )
+                                    : Text(
+                                        FFLocalizations.of(context).getText(
+                                          'yufaecww' /* Sign In */,
+                                        ),
+                                        style: FlutterFlowTheme.of(context)
+                                            .bodyMedium
+                                            .override(
+                                              font: GoogleFonts.poppins(
+                                                fontWeight: FontWeight.w600,
+                                                fontStyle:
+                                                    FlutterFlowTheme.of(context)
+                                                        .bodyMedium
+                                                        .fontStyle,
+                                              ),
+                                              color: Color(0xFF232323),
+                                              fontSize: 16.0,
+                                              letterSpacing: 0.0,
+                                              fontWeight: FontWeight.w600,
+                                              fontStyle: FlutterFlowTheme.of(context)
                                                   .bodyMedium
                                                   .fontStyle,
-                                        ),
-                                        color: Color(0xFF232323),
-                                        fontSize: 16.0,
-                                        letterSpacing: 0.0,
-                                        fontWeight: FontWeight.w600,
-                                        fontStyle: FlutterFlowTheme.of(context)
-                                            .bodyMedium
-                                            .fontStyle,
+                                            ),
                                       ),
-                                ),
                               ),
                             ),
                           ),
