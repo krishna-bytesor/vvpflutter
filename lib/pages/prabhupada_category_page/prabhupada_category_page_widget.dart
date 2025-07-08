@@ -682,7 +682,16 @@ class _PrabhupadaCategoryPageWidgetState
                                                   crossAxisCount: 2,
                                                   crossAxisSpacing: 10.0,
                                                   mainAxisSpacing: 10.0,
-                                                  childAspectRatio: 0.7,
+                                                      childAspectRatio: () {
+                                                        double width = MediaQuery.of(context).size.width;
+                                                        if (width < 400) {
+                                                          return 0.67; // Smaller screens
+                                                        } else if (width < 800) {
+                                                          return 0.82; // Medium screens
+                                                        } else {
+                                                          return 0.8; // Larger screens
+                                                        }
+                                                      }(),
                                                 ),
                                                 shrinkWrap: true,
                                                 scrollDirection: Axis.vertical,
@@ -747,68 +756,116 @@ class _PrabhupadaCategoryPageWidgetState
                                                               mainAxisAlignment: MainAxisAlignment.start,
                                                               crossAxisAlignment: CrossAxisAlignment.start,
                                                               children: [
-                                                                ClipRRect(
-                                                                  borderRadius: BorderRadius.circular(8.0),
-                                                                  child: Image.network(
-                                                                    getJsonField(categoryListItem, r'''$.image''').toString(),
-                                                                    width: imageSize,
-                                                                    height: imageSize,
-                                                                    fit: BoxFit.cover,
-                                                                    errorBuilder: (context, error, stackTrace) => Image.asset(
-                                                                      'assets/images/error_image.png',
-                                                                      width: imageSize,
-                                                                      height: imageSize,
-                                                                      fit: BoxFit.cover,
+                                                                Align(
+                                                                  alignment:
+                                                                  AlignmentDirectional(
+                                                                      0.0,
+                                                                      -1.0),
+                                                                  child:
+                                                                  ClipRRect(
+                                                                    borderRadius:
+                                                                    BorderRadius.circular(
+                                                                        8.0),
+                                                                    child: Image
+                                                                        .network(
+                                                                      getJsonField(
+                                                                        categoryListItem,
+                                                                        r'''$.image''',
+                                                                      ).toString(),
+                                                                      width:
+                                                                      165.0,
+                                                                      height:
+                                                                      165.0,
+                                                                      fit: BoxFit
+                                                                          .cover,
+                                                                      errorBuilder: (context,
+                                                                          error,
+                                                                          stackTrace) =>
+                                                                          Image
+                                                                              .asset(
+                                                                            'assets/images/error_image.png',
+                                                                            width:
+                                                                            165.0,
+                                                                            height:
+                                                                            165.0,
+                                                                            fit: BoxFit
+                                                                                .cover,
+                                                                          ),
                                                                     ),
                                                                   ),
                                                                 ),
-                                                                Padding(
-                                                                  padding: const EdgeInsetsDirectional.fromSTEB(8.0, 4.0, 4.0, 0.0),
-                                                                  child: Column(
-                                                                    mainAxisSize: MainAxisSize.max,
-                                                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                                                    children: [
-                                                                      SingleChildScrollView(
-                                                                        scrollDirection: Axis.horizontal,
-                                                                        child: Row(
-                                                                          children: [
-                                                                            Padding(
-                                                                              padding: const EdgeInsetsDirectional.fromSTEB(1, 0, 10, 0),
-                                                                              child: AnimatedDefaultTextStyle(
-                                                                                duration: const Duration(milliseconds: 1000),
-                                                                                curve: Curves.linear,
-                                                                                style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                                                                  font: GoogleFonts.poppins(
+                                                                Flexible(
+                                                                  child: Padding(
+                                                                    padding: EdgeInsetsDirectional
+                                                                        .fromSTEB(
+                                                                        8.0,
+                                                                        4.0,
+                                                                        0.0,
+                                                                        0.0),
+                                                                    child: Column(
+                                                                      mainAxisSize:
+                                                                      MainAxisSize
+                                                                          .max,
+                                                                      crossAxisAlignment:
+                                                                      CrossAxisAlignment
+                                                                          .stretch,
+                                                                      children: [
+                                                                        SingleChildScrollView(
+                                                                          scrollDirection:
+                                                                          Axis.horizontal,
+                                                                          child:
+                                                                          Row(
+                                                                            mainAxisSize:
+                                                                            MainAxisSize.max,
+                                                                            children: [
+                                                                              Padding(
+                                                                                padding: EdgeInsetsDirectional.fromSTEB(2.0, 0.0, 12.0, 0.0),
+                                                                                child: Text(
+                                                                                  getJsonField(
+                                                                                    categoryListItem,
+                                                                                    r'''$.name''',
+                                                                                  ).toString(),
+                                                                                  maxLines: 1,
+                                                                                  style: FlutterFlowTheme.of(context).bodyMedium.override(
+                                                                                    font: GoogleFonts.poppins(
+                                                                                      fontWeight: FontWeight.w500,
+                                                                                      fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                    ),
+                                                                                    color: Color(0xFF232323),
+                                                                                    fontSize: 16.0,
+                                                                                    letterSpacing: 0.0,
                                                                                     fontWeight: FontWeight.w500,
                                                                                     fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
                                                                                   ),
-                                                                                  color: const Color(0xFF232323),
-                                                                                  fontSize: titleFontSize,
-                                                                                  letterSpacing: 0.0,
-                                                                                ),
-                                                                                child: Text(
-                                                                                  getJsonField(categoryListItem, r'''$.name''').toString(),
                                                                                 ),
                                                                               ),
-                                                                            ),
-                                                                          ],
+                                                                            ],
+                                                                          ),
                                                                         ),
-                                                                      ),
-                                                                      AutoSizeText(
-                                                                        '${getJsonField(categoryListItem, r'''$.posts_count''').toString()} audios',
-                                                                        minFontSize: 8.0,
-                                                                        style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                                                          font: GoogleFonts.poppins(
+                                                                        AutoSizeText(
+                                                                          '${getJsonField(
+                                                                            categoryListItem,
+                                                                            r'''$.posts_count''',
+                                                                          ).toString()} audios',
+                                                                          minFontSize:
+                                                                          6.0,
+                                                                          style: FlutterFlowTheme.of(context)
+                                                                              .bodyMedium
+                                                                              .override(
+                                                                            font: GoogleFonts.poppins(
+                                                                              fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                              fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                            ),
+                                                                            color: FlutterFlowTheme.of(context).backGrey,
+                                                                            fontSize: 12.0,
+                                                                            letterSpacing: 0.0,
                                                                             fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
                                                                             fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
                                                                           ),
-                                                                          fontSize: subtitleFontSize,
-                                                                          color: FlutterFlowTheme.of(context).backGrey,
-                                                                          letterSpacing: 0.0,
-                                                                         ),
-                                                                      ),
-                                                                    ],
-                                                                   ),
+                                                                        ),
+                                                                      ],
+                                                                    ),
+                                                                  ),
                                                                 ),
                                                               ],
                                                             );

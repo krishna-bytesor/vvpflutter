@@ -1679,6 +1679,19 @@ class _ProfilePageWidgetState extends State<ProfilePageWidget> {
                               );
                               return;
                             }
+                            // Add validation for Bio
+                            if (_model.descriptionTextController.text
+                                .trim()
+                                .isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Please update Bio'),
+                                  backgroundColor:
+                                      FlutterFlowTheme.of(context).secondary,
+                                ),
+                              );
+                              return;
+                            }
 
                             // If all fields are valid, proceed with update
                             if (_model.formKey.currentState == null ||

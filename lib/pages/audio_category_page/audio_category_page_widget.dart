@@ -700,7 +700,16 @@ class _AudioCategoryPageWidgetState extends State<AudioCategoryPageWidget> {
                                                     crossAxisCount: 2,
                                                     crossAxisSpacing: 10.0,
                                                     mainAxisSpacing: 10.0,
-                                                    childAspectRatio: 0.65,
+                                                        childAspectRatio: () {
+                                                          double width = MediaQuery.of(context).size.width;
+                                                          if (width < 400) {
+                                                            return 0.67; // Smaller screens
+                                                          } else if (width < 800) {
+                                                            return 0.82; // Medium screens
+                                                          } else {
+                                                            return 0.8; // Larger screens
+                                                          }
+                                                        }(),
                                                   ),
                                                   primary: false,
                                                   shrinkWrap: true,

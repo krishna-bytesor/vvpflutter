@@ -214,22 +214,59 @@ class _FeaturedVideosWidgetState extends State<FeaturedVideosWidget> {
                                             ClipRRect(
                                               borderRadius:
                                               BorderRadius.circular(8.0),
-                                              child: Image.network(
-                                                getJsonField(
-                                                  videoListItem,
-                                                  r'''$.image''',
-                                                ).toString(),
-                                                width: 144.0,
-                                                height: 82.0,
-                                                fit: BoxFit.cover,
-                                                errorBuilder: (context, error,
-                                                    stackTrace) =>
-                                                    Image.asset(
-                                                      'assets/images/error_image.png',
-                                                      width: 144.0,
-                                                      height: 82.0,
-                                                      fit: BoxFit.cover,
-                                                    ),
+                                              child: Builder(
+                                                builder:
+                                                    (context) {
+                                                  double screenWidth = MediaQuery.of(context)
+                                                      .size
+                                                      .width;
+
+                                                  double
+                                                  imageWidth;
+                                                  double
+                                                  imageHeight;
+
+                                                  if (screenWidth <
+                                                      400) {
+                                                    imageWidth =
+                                                    110.0;
+                                                    imageHeight =
+                                                    65.0;
+                                                  } else if (screenWidth <
+                                                      800) {
+                                                    imageWidth =
+                                                    100.0;
+                                                    imageHeight =
+                                                    72.0;
+                                                  } else {
+                                                    imageWidth =
+                                                    114.0;
+                                                    imageHeight =
+                                                    82.0;
+                                                  }
+
+                                                  return Image
+                                                      .network(
+                                                    getJsonField(videoListItem, r'''$.image''')
+                                                        .toString(),
+                                                    width:
+                                                    imageWidth,
+                                                    height:
+                                                    imageHeight,
+                                                    fit: BoxFit
+                                                        .cover,
+                                                    errorBuilder: (context, error, stackTrace) =>
+                                                        Image.asset(
+                                                          'assets/images/error_image.png',
+                                                          width:
+                                                          imageWidth,
+                                                          height:
+                                                          imageHeight,
+                                                          fit:
+                                                          BoxFit.cover,
+                                                        ),
+                                                  );
+                                                },
                                               ),
                                             ),
                                             Flexible(

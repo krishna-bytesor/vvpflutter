@@ -3,6 +3,10 @@ import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'package:flutter/material.dart';
 import 'mini_player_model.dart';
+import 'package:v_v_p_swami/audio_helpers/page_manager.dart';
+import 'package:v_v_p_swami/audio_helpers/service_locator.dart';
+import 'package:v_v_p_swami/audio_helpers/audio_handler.dart';
+import 'package:audio_service/audio_service.dart';
 export 'mini_player_model.dart';
 
 class MiniPlayerWidget extends StatefulWidget {
@@ -108,6 +112,22 @@ class _MiniPlayerWidgetState extends State<MiniPlayerWidget> {
                                 color: FlutterFlowTheme.of(context)
                                     .secondaryBackground,
                                 size: 40.0,
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.close,
+                                    color: FlutterFlowTheme.of(context)
+                                        .secondaryBackground),
+                                onPressed: () async {
+                                  final pageManager = getIt<PageManager>();
+                                  await pageManager.audioHandler.stop();
+                                  pageManager.currentSongNotifier.value = null;
+                                  pageManager.setLoadingNewAudio(false);
+                                  pageManager.playButtonNotifier.value =
+                                      ButtonState.paused;
+                                  setState(() {});
+                                  print(
+                                      'Mini player closed and audio handler stopped.');
+                                },
                               ),
                             ],
                           ),

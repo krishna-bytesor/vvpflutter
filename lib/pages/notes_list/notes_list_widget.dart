@@ -1,6 +1,10 @@
-﻿import 'package:v_v_p_swami/audio_helpers/main_player/main_player.dart';
+﻿import 'package:audio_service/audio_service.dart';
+import 'package:v_v_p_swami/audio_helpers/main_player/main_player.dart';
 import 'package:v_v_p_swami/audio_helpers/player_invoke.dart';
 
+import '../../audio_helpers/audio_handler.dart';
+import '../../audio_helpers/mediaitem_converter.dart';
+import '../../audio_helpers/page_manager.dart';
 import '/backend/api_requests/api_calls.dart';
 import '/components/bottom_nav_bar/bottom_nav_bar_widget.dart';
 import '/components/empty/empty_widget.dart';
@@ -21,6 +25,8 @@ import 'package:provider/provider.dart';
 import 'package:webviewx_plus/webviewx_plus.dart';
 import 'notes_list_model.dart';
 export 'notes_list_model.dart';
+import 'package:get_it/get_it.dart';
+import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
 class NotesListWidget extends StatefulWidget {
   const NotesListWidget({super.key});
@@ -37,6 +43,26 @@ class _NotesListWidgetState extends State<NotesListWidget>
   late NotesListModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
+
+  Future<String> getPlayableUrl(dynamic url) async {
+    final urlStr = url.toString();
+    if (urlStr.contains('youtube.com') || urlStr.contains('youtu.be')) {
+      // Extract direct audio stream URL from YouTube
+      // Make sure to add youtube_explode_dart to your pubspec.yaml
+      final yt = YoutubeExplode();
+      try {
+        final videoId = VideoId(urlStr);
+        final manifest = await yt.videos.streamsClient.getManifest(videoId);
+        final audioStreamInfo = manifest.audioOnly.withHighestBitrate();
+        yt.close();
+        return audioStreamInfo.url.toString();
+      } catch (e) {
+        yt.close();
+        return urlStr; // fallback to original URL if extraction fails
+      }
+    }
+    return urlStr;
+  }
 
   @override
   void initState() {
@@ -111,8 +137,8 @@ class _NotesListWidgetState extends State<NotesListWidget>
                 ),
               ),
               child: Padding(
-                padding:
-                    const EdgeInsetsDirectional.fromSTEB(0.0, 40.0, 0.0, 0.0),
+                    padding: const EdgeInsetsDirectional.fromSTEB(
+                        0.0, 40.0, 0.0, 0.0),
                 child: Column(
                   mainAxisSize: MainAxisSize.max,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -126,7 +152,8 @@ class _NotesListWidgetState extends State<NotesListWidget>
                           children: [
                             Row(
                               mainAxisSize: MainAxisSize.max,
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                               children: [
                                 FlutterFlowIconButton(
                                   borderColor: Colors.transparent,
@@ -185,20 +212,24 @@ class _NotesListWidgetState extends State<NotesListWidget>
                                     alignment: Alignment(0.0, 0),
                                     child: TabBar(
                                       isScrollable: true,
-                                      labelColor: FlutterFlowTheme.of(context)
+                                          labelColor:
+                                              FlutterFlowTheme.of(context)
                                           .primaryText,
                                       unselectedLabelColor:
                                           const Color(0xFF436073),
-                                      labelStyle: FlutterFlowTheme.of(context)
+                                          labelStyle: FlutterFlowTheme.of(
+                                                  context)
                                           .titleMedium
                                           .override(
                                             font: GoogleFonts.poppins(
                                               fontWeight:
-                                                  FlutterFlowTheme.of(context)
+                                                      FlutterFlowTheme.of(
+                                                              context)
                                                       .titleMedium
                                                       .fontWeight,
                                               fontStyle:
-                                                  FlutterFlowTheme.of(context)
+                                                      FlutterFlowTheme.of(
+                                                              context)
                                                       .titleMedium
                                                       .fontStyle,
                                             ),
@@ -277,7 +308,8 @@ class _NotesListWidgetState extends State<NotesListWidget>
 
                                             return ListView.separated(
                                               padding: EdgeInsets.zero,
-                                              scrollDirection: Axis.vertical,
+                                                  scrollDirection:
+                                                      Axis.vertical,
                                               itemCount: audios.length,
                                               separatorBuilder: (_, __) =>
                                                   SizedBox(height: 8.0),
@@ -288,12 +320,14 @@ class _NotesListWidgetState extends State<NotesListWidget>
                                                 return Padding(
                                                   padding:
                                                       const EdgeInsetsDirectional
-                                                          .fromSTEB(
-                                                          20.0, 8.0, 20.0, 0.0),
+                                                              .fromSTEB(20.0,
+                                                              8.0, 20.0, 0.0),
                                                   child: Container(
-                                                    decoration: BoxDecoration(
+                                                        decoration:
+                                                            BoxDecoration(
                                                       borderRadius:
-                                                          BorderRadius.circular(
+                                                              BorderRadius
+                                                                  .circular(
                                                               14.0),
                                                     ),
                                                     child: Column(
@@ -307,166 +341,115 @@ class _NotesListWidgetState extends State<NotesListWidget>
                                                               .transparent,
                                                           hoverColor: Colors
                                                               .transparent,
-                                                          highlightColor: Colors
+                                                              highlightColor:
+                                                                  Colors
                                                               .transparent,
                                                           onTap: () async {
-                                                            FFAppState()
-                                                                    .audioUrl =
-                                                                getJsonField(
-                                                              audiosItem,
-                                                              r'''$.post.data''',
-                                                            ).toString();
-                                                            FFAppState()
-                                                                    .currentAudioTrack =
-                                                                getJsonField(
-                                                              audiosItem,
-                                                              r'''$.post''',
-                                                            );
-                                                            FFAppState()
-                                                                    .AudioPlayerSongIndex =
-                                                                audiosIndex;
-                                                            FFAppState()
-                                                                    .AudioPlayerList =
-                                                                functions
-                                                                    .jsontoListJson(
+                                                                // Open MainPlayerView immediately as a modal overlay
+                                                                Navigator.of(
+                                                                        context,
+                                                                        rootNavigator:
+                                                                            true)
+                                                                    .push(
+                                                                  PageRouteBuilder(
+                                                                    opaque:
+                                                                        false,
+                                                                    pageBuilder: (_,
+                                                                            __,
+                                                                            ___) =>
+                                                                        const MainPlayerView(),
+                                                                  ),
+                                                                );
+                                                                final pageManager =
+                                                                    GetIt.I<
+                                                                        PageManager>();
+                                                                // Immediately show loading spinner in MainPlayer and MiniPlayer
+                                                                pageManager
+                                                                    .setLoadingNewAudio(
+                                                                        true);
+                                                                pageManager
+                                                                        .playButtonNotifier
+                                                                        .value =
+                                                                    ButtonState
+                                                                        .loading;
+                                                                pageManager
+                                                                    .currentSongNotifier
+                                                                    .value = null;
+                                                                // Immediately stop any currently playing audio
+                                                                await pageManager
+                                                                    .audioHandler
+                                                                    .stop();
+                                                                // Fetch all URLs in parallel
+                                                                final urls = await Future.wait(audios.map((item) =>
+                                                                    getPlayableUrl(
                                                                         getJsonField(
-                                                                      audiosItem,
-                                                                      r'''$.post''',
-                                                                    ))
-                                                                    .toList()
-                                                                    .cast<
-                                                                        dynamic>();
-                                                            safeSetState(() {});
-                                                            //   logFirebaseEvent(
-                                                            //       'Row_navigate_to');
-
-                                                            //   context.pushNamed(
-                                                            //     'NowPlayingPage',
-                                                            //     queryParameters: {
-                                                            //       'currentAudio':
-                                                            //           serializeParam(
-                                                            //         getJsonField(
-                                                            //           audiosItem,
-                                                            //           r'''$.post''',
-                                                            //         ),
-                                                            //         ParamType
-                                                            //             .JSON,
-                                                            //       ),
-                                                            //       'chapters':
-                                                            //           serializeParam(
-                                                            //         functions
-                                                            //             .jsontoListJson(
-                                                            //                 getJsonField(
-                                                            //           audiosItem,
-                                                            //           r'''$.post''',
-                                                            //         )),
-                                                            //         ParamType
-                                                            //             .JSON,
-                                                            //         isList: true,
-                                                            //       ),
-                                                            //       'currentAudioIndex':
-                                                            //           serializeParam(
-                                                            //         audiosIndex,
-                                                            //         ParamType.int,
-                                                            //       ),
-                                                            //     }.withoutNulls,
-                                                            //   );
-                                                            playerPlayProcessDebounce(
+                                                                            item,
+                                                                            r'$.post.data'))));
+                                                                final playlist =
+                                                                    <MediaItem>[];
+                                                                for (int i = 0;
+                                                                    i <
                                                               audios
-                                                                  .map((sObj) {
-                                                                final post = sObj[
-                                                                    'post']; // Access the 'post' object from 'sObj'
-
-                                                                return {
+                                                                            .length;
+                                                                    i++) {
+                                                                  final item =
+                                                                      audios[i];
+                                                                  final url =
+                                                                      urls[i];
+                                                                  final post =
+                                                                      item[
+                                                                          'post'];
+                                                                  final itemMap =
+                                                                      {
                                                                   'id': post[
                                                                           'id']
-                                                                      .toString(), // Access top-level field
-                                                                  'title': post?[
-                                                                              'title']
-                                                                          ?.toString() ??
-                                                                      'Unknown', // Access nested post fields
-                                                                  'artist': post?[
-                                                                              'author']
-                                                                          ?.toString() ??
-                                                                      'Unknown',
-                                                                  'album': post?[
-                                                                              'shloka_chapter']
-                                                                          ?.toString() ??
-                                                                      'Unknown',
-                                                                  'genre': post?[
-                                                                              'language']
-                                                                          ?.toString() ??
-                                                                      'Unknown',
-                                                                  'image': post?[
-                                                                              'image']
-                                                                          ?.toString() ??
-                                                                      '',
-                                                                  'url': post?[
-                                                                              'data']
-                                                                          ?.toString() ??
-                                                                      '',
-                                                                  'user_id': sObj[
-                                                                          'user_id']
-                                                                      .toString(), // Access top-level field
-                                                                  'user_name': post?[
-                                                                              'author']
-                                                                          ?.toString() ??
-                                                                      'Unknown', // Use author for user_name
+                                                                        .toString(),
+                                                                    'album': post[
+                                                                        'album'],
+                                                                    'artist': post[
+                                                                        'author'],
+                                                                    'duration':
+                                                                        post['duration'] ??
+                                                                            180,
+                                                                    'title': post[
+                                                                        'title'],
+                                                                    'image': post[
+                                                                        'image'],
+                                                                    'language':
+                                                                        post[
+                                                                            'language'],
+                                                                    'url': url,
+                                                                    'user_id': item[
+                                                                        'user_id'],
+                                                                    'user_name':
+                                                                        post[
+                                                                            'author'],
+                                                                    'album_id':
+                                                                        post[
+                                                                            'album_id'],
                                                                   'extra': {
                                                                     'json':
-                                                                        post, // Include the full original object
-                                                                    'date': post?['date']
-                                                                            ?.toString() ??
-                                                                        'Unknown',
-                                                                    'country': post?['country']
-                                                                            ?.toString() ??
-                                                                        'Unknown',
-                                                                    'city': post?['city']
-                                                                            ?.toString() ??
-                                                                        'Unknown',
-                                                                  },
-                                                                };
-                                                              }).toList(),
-                                                              // {
-                                                              //   'id':
-                                                              //       sObj.post["id"].toString(),
-                                                              //   'title':
-                                                              //       sObj["title"].toString(),
-                                                              //   'artist':
-                                                              //       sObj["author"].toString(),
-                                                              //   'album':
-                                                              //       sObj["album"].toString(),
-                                                              //   'genre':
-                                                              //       sObj["language"].toString(),
-                                                              //   'image':
-                                                              //       sObj["image"].toString(),
-                                                              //   'url':
-                                                              //       sObj["data"].toString(),
-                                                              //   'user_id':
-                                                              //       sObj["artistsId"].toString(),
-                                                              //   'user_name':
-                                                              //       sObj["artists"].toString(),
-                                                              //   'extra':
-                                                              //       {
-                                                              //     'json': sObj,
-                                                              //     'date': sObj.post["date"].toString(),
-                                                              //     'country': sObj["country"].toString(),
-                                                              //     'city': sObj["city"].toString(),
-                                                              //   },
-                                                              // })
-                                                              // .toList(),
-                                                              audiosIndex,
-                                                            );
-                                                            Navigator.push(
-                                                              context,
-                                                              PageRouteBuilder(
-                                                                opaque: false,
-                                                                pageBuilder: (_,
-                                                                        ___,
-                                                                        __) =>
-                                                                    const MainPlayerView(),
-                                                              ),
-                                                            );
+                                                                          post,
+                                                                      'date': post[
+                                                                          'date'],
+                                                                      'country':
+                                                                          post[
+                                                                              'country'],
+                                                                      'city': post[
+                                                                          'city'],
+                                                                    },
+                                                                  };
+                                                                  playlist.add(
+                                                                      await MediaItemConverter
+                                                                          .mapToMediaItem(
+                                                                              itemMap));
+                                                                }
+                                                                await (pageManager
+                                                                            .audioHandler
+                                                                        as MyAudioHandler)
+                                                                    .setNewPlaylist(
+                                                                        playlist,
+                                                                        audiosIndex);
                                                           },
                                                           child: Row(
                                                             mainAxisSize:
@@ -475,8 +458,7 @@ class _NotesListWidgetState extends State<NotesListWidget>
                                                             children: [
                                                               ClipRRect(
                                                                 borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
+                                                                        BorderRadius.circular(
                                                                             8.0),
                                                                 child: Image
                                                                     .network(
@@ -484,8 +466,10 @@ class _NotesListWidgetState extends State<NotesListWidget>
                                                                     audiosItem,
                                                                     r'''$.post.image''',
                                                                   ).toString(),
-                                                                  width: 104.0,
-                                                                  height: 104.0,
+                                                                      width:
+                                                                          104.0,
+                                                                      height:
+                                                                          104.0,
                                                                   fit: BoxFit
                                                                       .cover,
                                                                   errorBuilder: (context,
@@ -504,36 +488,32 @@ class _NotesListWidgetState extends State<NotesListWidget>
                                                                 ),
                                                               ),
                                                               Flexible(
-                                                                child: Padding(
-                                                                  padding:
-                                                                      const EdgeInsetsDirectional
+                                                                    child:
+                                                                        Padding(
+                                                                      padding: const EdgeInsetsDirectional
                                                                           .fromSTEB(
                                                                           16.0,
                                                                           0.0,
                                                                           16.0,
                                                                           0.0),
-                                                                  child: Column(
+                                                                      child:
+                                                                          Column(
                                                                     mainAxisSize:
-                                                                        MainAxisSize
-                                                                            .max,
+                                                                            MainAxisSize.max,
                                                                     mainAxisAlignment:
-                                                                        MainAxisAlignment
-                                                                            .spaceBetween,
+                                                                            MainAxisAlignment.spaceBetween,
                                                                     crossAxisAlignment:
-                                                                        CrossAxisAlignment
-                                                                            .start,
-                                                                    children: [
+                                                                            CrossAxisAlignment.start,
+                                                                        children:
+                                                                            [
                                                                       SingleChildScrollView(
                                                                         scrollDirection:
                                                                             Axis.horizontal,
                                                                         child:
                                                                             Row(
-                                                                          mainAxisSize:
-                                                                              MainAxisSize.max,
-                                                                          mainAxisAlignment:
-                                                                              MainAxisAlignment.spaceBetween,
-                                                                          crossAxisAlignment:
-                                                                              CrossAxisAlignment.start,
+                                                                              mainAxisSize: MainAxisSize.max,
+                                                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                                              crossAxisAlignment: CrossAxisAlignment.start,
                                                                           children: [
                                                                             Text(
                                                                               getJsonField(
@@ -589,13 +569,6 @@ class _NotesListWidgetState extends State<NotesListWidget>
                                                                                       fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
                                                                                       lineHeight: 1.5,
                                                                                     ),
-                                                                              ),
-                                                                            ),
-                                                                              SizedBox(
-                                                                                height: 16.0,
-                                                                                child: VerticalDivider(
-                                                                                  thickness: 1.0,
-                                                                                  color: Color(0xFF7ECBC9),
                                                                                 ),
                                                                               ),
                                                                           if (getJsonField(
@@ -683,18 +656,15 @@ class _NotesListWidgetState extends State<NotesListWidget>
                                                                         ],
                                                                       ),
                                                                       Padding(
-                                                                        padding: const EdgeInsetsDirectional
-                                                                            .fromSTEB(
+                                                                            padding: const EdgeInsetsDirectional.fromSTEB(
                                                                             0.0,
                                                                             8.0,
                                                                             0.0,
                                                                             0.0),
                                                                         child:
                                                                             Row(
-                                                                          mainAxisSize:
-                                                                              MainAxisSize.max,
-                                                                          mainAxisAlignment:
-                                                                              MainAxisAlignment.spaceBetween,
+                                                                              mainAxisSize: MainAxisSize.max,
+                                                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                                           children: [
                                                                             Container(
                                                                               decoration: BoxDecoration(
@@ -894,9 +864,7 @@ class _NotesListWidgetState extends State<NotesListWidget>
                                                                           ],
                                                                         ),
                                                                       ),
-                                                                    ].divide(SizedBox(
-                                                                        height:
-                                                                            8.0)),
+                                                                        ].divide(SizedBox(height: 8.0)),
                                                                   ),
                                                                 ),
                                                               ),
@@ -905,8 +873,8 @@ class _NotesListWidgetState extends State<NotesListWidget>
                                                         ),
                                                         Divider(
                                                           thickness: 1.0,
-                                                          color:
-                                                              Color(0xFFD9D9D9),
+                                                              color: Color(
+                                                                  0xFFD9D9D9),
                                                         ),
                                                       ].divide(SizedBox(
                                                           height: 8.0)),
@@ -942,8 +910,10 @@ class _NotesListWidgetState extends State<NotesListWidget>
 
                                             return ListView.separated(
                                               padding: EdgeInsets.zero,
-                                              scrollDirection: Axis.vertical,
-                                              itemCount: prabhupadaList.length,
+                                                  scrollDirection:
+                                                      Axis.vertical,
+                                                  itemCount:
+                                                      prabhupadaList.length,
                                               separatorBuilder: (_, __) =>
                                                   SizedBox(height: 8.0),
                                               itemBuilder: (context,
@@ -954,12 +924,14 @@ class _NotesListWidgetState extends State<NotesListWidget>
                                                 return Padding(
                                                   padding:
                                                       const EdgeInsetsDirectional
-                                                          .fromSTEB(
-                                                          20.0, 8.0, 20.0, 0.0),
+                                                              .fromSTEB(20.0,
+                                                              8.0, 20.0, 0.0),
                                                   child: Container(
-                                                    decoration: BoxDecoration(
+                                                        decoration:
+                                                            BoxDecoration(
                                                       borderRadius:
-                                                          BorderRadius.circular(
+                                                              BorderRadius
+                                                                  .circular(
                                                               14.0),
                                                     ),
                                                     child: Column(
@@ -973,108 +945,116 @@ class _NotesListWidgetState extends State<NotesListWidget>
                                                               .transparent,
                                                           hoverColor: Colors
                                                               .transparent,
-                                                          highlightColor: Colors
+                                                              highlightColor:
+                                                                  Colors
                                                               .transparent,
                                                           onTap: () async {
-                                                            logFirebaseEvent(
-                                                                'NOTES_LIST_PAGE_Row_4w7r1193_ON_TAP');
-                                                            logFirebaseEvent(
-                                                                'Row_update_app_state');
-                                                            FFAppState()
-                                                                    .audioUrl =
-                                                                getJsonField(
-                                                              prabhupadaListItem,
-                                                              r'''$.post.data''',
-                                                            ).toString();
-                                                            FFAppState()
-                                                                    .currentAudioTrack =
-                                                                getJsonField(
-                                                              prabhupadaListItem,
-                                                              r'''$.post''',
-                                                            );
-                                                            FFAppState()
-                                                                    .AudioPlayerSongIndex =
-                                                                prabhupadaListIndex;
-                                                            FFAppState()
-                                                                    .AudioPlayerList =
-                                                                functions
-                                                                    .jsontoListJson(
+                                                                // Open MainPlayerView immediately as a modal overlay
+                                                                Navigator.of(
+                                                                        context,
+                                                                        rootNavigator:
+                                                                            true)
+                                                                    .push(
+                                                                  PageRouteBuilder(
+                                                                    opaque:
+                                                                        false,
+                                                                    pageBuilder: (_,
+                                                                            __,
+                                                                            ___) =>
+                                                                        const MainPlayerView(),
+                                                                  ),
+                                                                );
+                                                                final pageManager =
+                                                                    GetIt.I<
+                                                                        PageManager>();
+                                                                // Immediately show loading spinner in MainPlayer and MiniPlayer
+                                                                pageManager
+                                                                    .setLoadingNewAudio(
+                                                                        true);
+                                                                pageManager
+                                                                        .playButtonNotifier
+                                                                        .value =
+                                                                    ButtonState
+                                                                        .loading;
+                                                                pageManager
+                                                                    .currentSongNotifier
+                                                                    .value = null;
+                                                                // Immediately stop any currently playing audio
+                                                                await pageManager
+                                                                    .audioHandler
+                                                                    .stop();
+                                                                // Fetch all URLs in parallel
+                                                                final urls = await Future.wait(prabhupadaList.map((item) =>
+                                                                    getPlayableUrl(
                                                                         getJsonField(
-                                                                      prabhupadaListItem,
-                                                                      r'''$.post''',
-                                                                    ))
-                                                                    .toList()
-                                                                    .cast<
-                                                                        dynamic>();
-                                                            safeSetState(() {});
-                                                            playerPlayProcessDebounce(
+                                                                            item,
+                                                                            r'$.post.data'))));
+                                                                final playlist =
+                                                                    <MediaItem>[];
+                                                                for (int i = 0;
+                                                                    i <
                                                               prabhupadaList
-                                                                  .map((sObj) {
-                                                                final post = sObj[
-                                                                    'post']; // Access the 'post' object from 'sObj'
-
-                                                                return {
+                                                                            .length;
+                                                                    i++) {
+                                                                  final item =
+                                                                      prabhupadaList[
+                                                                          i];
+                                                                  final url =
+                                                                      urls[i];
+                                                                  final post =
+                                                                      item[
+                                                                          'post'];
+                                                                  final itemMap =
+                                                                      {
                                                                   'id': post[
                                                                           'id']
-                                                                      .toString(), // Access top-level field
-                                                                  'title': post?[
-                                                                              'title']
-                                                                          ?.toString() ??
-                                                                      'Unknown', // Access nested post fields
-                                                                  'artist': post?[
-                                                                              'author']
-                                                                          ?.toString() ??
-                                                                      'Unknown',
-                                                                  'album': post?[
-                                                                              'shloka_chapter']
-                                                                          ?.toString() ??
-                                                                      'Unknown',
-                                                                  'genre': post?[
-                                                                              'language']
-                                                                          ?.toString() ??
-                                                                      'Unknown',
-                                                                  'image': post?[
-                                                                              'image']
-                                                                          ?.toString() ??
-                                                                      '',
-                                                                  'url': post?[
-                                                                              'data']
-                                                                          ?.toString() ??
-                                                                      '',
-                                                                  'user_id': sObj[
-                                                                          'user_id']
-                                                                      .toString(), // Access top-level field
-                                                                  'user_name': post?[
-                                                                              'author']
-                                                                          ?.toString() ??
-                                                                      'Unknown', // Use author for user_name
+                                                                        .toString(),
+                                                                    'album': post[
+                                                                        'album'],
+                                                                    'artist': post[
+                                                                        'author'],
+                                                                    'duration':
+                                                                        post['duration'] ??
+                                                                            180,
+                                                                    'title': post[
+                                                                        'title'],
+                                                                    'image': post[
+                                                                        'image'],
+                                                                    'language':
+                                                                        post[
+                                                                            'language'],
+                                                                    'url': url,
+                                                                    'user_id': item[
+                                                                        'user_id'],
+                                                                    'user_name':
+                                                                        post[
+                                                                            'author'],
+                                                                    'album_id':
+                                                                        post[
+                                                                            'album_id'],
                                                                   'extra': {
                                                                     'json':
-                                                                        post, // Include the full original object
-                                                                    'date': post?['date']
-                                                                            ?.toString() ??
-                                                                        'Unknown',
-                                                                    'country': post?['country']
-                                                                            ?.toString() ??
-                                                                        'Unknown',
-                                                                    'city': post?['city']
-                                                                            ?.toString() ??
-                                                                        'Unknown',
-                                                                  },
-                                                                };
-                                                              }).toList(),
-                                                              prabhupadaListIndex,
-                                                            );
-                                                            Navigator.push(
-                                                              context,
-                                                              PageRouteBuilder(
-                                                                opaque: false,
-                                                                pageBuilder: (_,
-                                                                        ___,
-                                                                        __) =>
-                                                                    const MainPlayerView(),
-                                                              ),
-                                                            );
+                                                                          post,
+                                                                      'date': post[
+                                                                          'date'],
+                                                                      'country':
+                                                                          post[
+                                                                              'country'],
+                                                                      'city': post[
+                                                                          'city'],
+                                                                    },
+                                                                  };
+                                                                  playlist.add(
+                                                                      await MediaItemConverter
+                                                                          .mapToMediaItem(
+                                                                              itemMap));
+                                                                }
+                                                                await (pageManager
+                                                                            .audioHandler
+                                                                        as MyAudioHandler)
+                                                                    .setNewPlaylist(
+                                                                        playlist,
+                                                                        prabhupadaListIndex);
                                                           },
                                                           child: Row(
                                                             mainAxisSize:
@@ -1083,8 +1063,7 @@ class _NotesListWidgetState extends State<NotesListWidget>
                                                             children: [
                                                               ClipRRect(
                                                                 borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
+                                                                        BorderRadius.circular(
                                                                             8.0),
                                                                 child: Image
                                                                     .network(
@@ -1092,8 +1071,10 @@ class _NotesListWidgetState extends State<NotesListWidget>
                                                                     prabhupadaListItem,
                                                                     r'''$.post.image''',
                                                                   ).toString(),
-                                                                  width: 104.0,
-                                                                  height: 104.0,
+                                                                      width:
+                                                                          104.0,
+                                                                      height:
+                                                                          104.0,
                                                                   fit: BoxFit
                                                                       .cover,
                                                                   errorBuilder: (context,
@@ -1112,36 +1093,32 @@ class _NotesListWidgetState extends State<NotesListWidget>
                                                                 ),
                                                               ),
                                                               Flexible(
-                                                                child: Padding(
-                                                                  padding:
-                                                                      const EdgeInsetsDirectional
+                                                                    child:
+                                                                        Padding(
+                                                                      padding: const EdgeInsetsDirectional
                                                                           .fromSTEB(
                                                                           16.0,
                                                                           0.0,
                                                                           16.0,
                                                                           0.0),
-                                                                  child: Column(
+                                                                      child:
+                                                                          Column(
                                                                     mainAxisSize:
-                                                                        MainAxisSize
-                                                                            .max,
+                                                                            MainAxisSize.max,
                                                                     mainAxisAlignment:
-                                                                        MainAxisAlignment
-                                                                            .spaceBetween,
+                                                                            MainAxisAlignment.spaceBetween,
                                                                     crossAxisAlignment:
-                                                                        CrossAxisAlignment
-                                                                            .start,
-                                                                    children: [
+                                                                            CrossAxisAlignment.start,
+                                                                        children:
+                                                                            [
                                                                       SingleChildScrollView(
                                                                         scrollDirection:
                                                                             Axis.horizontal,
                                                                         child:
                                                                             Row(
-                                                                          mainAxisSize:
-                                                                              MainAxisSize.max,
-                                                                          mainAxisAlignment:
-                                                                              MainAxisAlignment.spaceBetween,
-                                                                          crossAxisAlignment:
-                                                                              CrossAxisAlignment.start,
+                                                                              mainAxisSize: MainAxisSize.max,
+                                                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                                              crossAxisAlignment: CrossAxisAlignment.start,
                                                                           children: [
                                                                             Text(
                                                                               getJsonField(
@@ -1284,18 +1261,15 @@ class _NotesListWidgetState extends State<NotesListWidget>
                                                                         ],
                                                                       ),
                                                                       Padding(
-                                                                        padding: const EdgeInsetsDirectional
-                                                                            .fromSTEB(
+                                                                            padding: const EdgeInsetsDirectional.fromSTEB(
                                                                             0.0,
                                                                             8.0,
                                                                             0.0,
                                                                             0.0),
                                                                         child:
                                                                             Row(
-                                                                          mainAxisSize:
-                                                                              MainAxisSize.max,
-                                                                          mainAxisAlignment:
-                                                                              MainAxisAlignment.spaceBetween,
+                                                                              mainAxisSize: MainAxisSize.max,
+                                                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                                           children: [
                                                                             Container(
                                                                               decoration: BoxDecoration(
@@ -1334,8 +1308,9 @@ class _NotesListWidgetState extends State<NotesListWidget>
                                                                                 ),
                                                                               ),
                                                                             ),
-                                                                            Row(
-                                                                              mainAxisSize: MainAxisSize.max,
+                                                                                Flexible(
+                                                                                  child: Row(
+                                                                                    mainAxisSize: MainAxisSize.min,
                                                                               mainAxisAlignment: MainAxisAlignment.end,
                                                                               children: [
                                                                                 LikeUnlikeWidget(
@@ -1491,13 +1466,12 @@ class _NotesListWidgetState extends State<NotesListWidget>
                                                                                     ),
                                                                                   ),
                                                                               ].divide(SizedBox(width: 4.0)),
+                                                                                  ),
                                                                             ),
                                                                           ],
                                                                         ),
                                                                       ),
-                                                                    ].divide(SizedBox(
-                                                                        height:
-                                                                            8.0)),
+                                                                        ].divide(SizedBox(height: 8.0)),
                                                                   ),
                                                                 ),
                                                               ),
@@ -1506,8 +1480,8 @@ class _NotesListWidgetState extends State<NotesListWidget>
                                                         ),
                                                         Divider(
                                                           thickness: 1.0,
-                                                          color:
-                                                              Color(0xFFD9D9D9),
+                                                              color: Color(
+                                                                  0xFFD9D9D9),
                                                         ),
                                                       ].divide(SizedBox(
                                                           height: 8.0)),
@@ -1543,23 +1517,27 @@ class _NotesListWidgetState extends State<NotesListWidget>
 
                                             return ListView.separated(
                                               padding: EdgeInsets.zero,
-                                              scrollDirection: Axis.vertical,
+                                                  scrollDirection:
+                                                      Axis.vertical,
                                               itemCount: videoList.length,
                                               separatorBuilder: (_, __) =>
                                                   SizedBox(height: 8.0),
-                                              itemBuilder:
-                                                  (context, videoListIndex) {
+                                                  itemBuilder: (context,
+                                                      videoListIndex) {
                                                 final videoListItem =
-                                                    videoList[videoListIndex];
+                                                        videoList[
+                                                            videoListIndex];
                                                 return Padding(
                                                   padding:
                                                       const EdgeInsetsDirectional
-                                                          .fromSTEB(
-                                                          20.0, 8.0, 20.0, 0.0),
+                                                              .fromSTEB(20.0,
+                                                              8.0, 20.0, 0.0),
                                                   child: Container(
-                                                    decoration: BoxDecoration(
+                                                        decoration:
+                                                            BoxDecoration(
                                                       borderRadius:
-                                                          BorderRadius.circular(
+                                                              BorderRadius
+                                                                  .circular(
                                                               14.0),
                                                     ),
                                                     child: Column(
@@ -1573,7 +1551,8 @@ class _NotesListWidgetState extends State<NotesListWidget>
                                                               .transparent,
                                                           hoverColor: Colors
                                                               .transparent,
-                                                          highlightColor: Colors
+                                                              highlightColor:
+                                                                  Colors
                                                               .transparent,
                                                           onTap: () async {
                                                             logFirebaseEvent(
@@ -1581,10 +1560,12 @@ class _NotesListWidgetState extends State<NotesListWidget>
                                                             logFirebaseEvent(
                                                                 'Row_navigate_to');
 
-                                                            context.pushNamed(
+                                                                context
+                                                                    .pushNamed(
                                                               VideoPostWidget
                                                                   .routeName,
-                                                              queryParameters: {
+                                                                  queryParameters:
+                                                                      {
                                                                 'videoItem':
                                                                     serializeParam(
                                                                   getJsonField(
@@ -1604,65 +1585,91 @@ class _NotesListWidgetState extends State<NotesListWidget>
                                                             children: [
                                                               ClipRRect(
                                                                 borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
+                                                                        BorderRadius.circular(
                                                                             8.0),
-                                                                child: Image
+                                                                    child:
+                                                                        Builder(
+                                                                      builder:
+                                                                          (context) {
+                                                                        double screenWidth = MediaQuery.of(context)
+                                                                            .size
+                                                                            .width;
+
+                                                                        double
+                                                                            imageWidth;
+                                                                        double
+                                                                            imageHeight;
+
+                                                                        if (screenWidth <
+                                                                            400) {
+                                                                          imageWidth =
+                                                                              90.0;
+                                                                          imageHeight =
+                                                                              65.0;
+                                                                        } else if (screenWidth <
+                                                                            800) {
+                                                                          imageWidth =
+                                                                              100.0;
+                                                                          imageHeight =
+                                                                              72.0;
+                                                                        } else {
+                                                                          imageWidth =
+                                                                              114.0;
+                                                                          imageHeight =
+                                                                               82.0;
+                                                                        }
+
+                                                                        return Image
                                                                     .network(
-                                                                  getJsonField(
-                                                                    videoListItem,
-                                                                    r'''$.post.image''',
-                                                                  ).toString(),
-                                                                  width: 144.0,
-                                                                  height: 82.0,
+                                                                          getJsonField(videoListItem, r'''$.post.image''')
+                                                                              .toString(),
+                                                                          width:
+                                                                              imageWidth,
+                                                                          height:
+                                                                              imageHeight,
                                                                   fit: BoxFit
                                                                       .cover,
-                                                                  errorBuilder: (context,
-                                                                          error,
-                                                                          stackTrace) =>
-                                                                      Image
-                                                                          .asset(
+                                                                          errorBuilder: (context, error, stackTrace) =>
+                                                                              Image.asset(
                                                                     'assets/images/error_image.png',
                                                                     width:
-                                                                        144.0,
+                                                                                imageWidth,
                                                                     height:
-                                                                        82.0,
-                                                                    fit: BoxFit
-                                                                        .cover,
-                                                                  ),
+                                                                                imageHeight,
+                                                                            fit:
+                                                                                BoxFit.cover,
+                                                                          ),
+                                                                        );
+                                                                      },
                                                                 ),
                                                               ),
                                                               Flexible(
-                                                                child: Padding(
-                                                                  padding:
-                                                                      const EdgeInsetsDirectional
+                                                                    child:
+                                                                        Padding(
+                                                                      padding: const EdgeInsetsDirectional
                                                                           .fromSTEB(
                                                                           16.0,
                                                                           0.0,
                                                                           16.0,
                                                                           0.0),
-                                                                  child: Column(
+                                                                      child:
+                                                                          Column(
                                                                     mainAxisSize:
-                                                                        MainAxisSize
-                                                                            .max,
+                                                                            MainAxisSize.max,
                                                                     mainAxisAlignment:
-                                                                        MainAxisAlignment
-                                                                            .spaceBetween,
+                                                                            MainAxisAlignment.spaceBetween,
                                                                     crossAxisAlignment:
-                                                                        CrossAxisAlignment
-                                                                            .start,
-                                                                    children: [
+                                                                            CrossAxisAlignment.start,
+                                                                        children:
+                                                                            [
                                                                       SingleChildScrollView(
                                                                         scrollDirection:
                                                                             Axis.horizontal,
                                                                         child:
                                                                             Row(
-                                                                          mainAxisSize:
-                                                                              MainAxisSize.max,
-                                                                          mainAxisAlignment:
-                                                                              MainAxisAlignment.spaceBetween,
-                                                                          crossAxisAlignment:
-                                                                              CrossAxisAlignment.start,
+                                                                              mainAxisSize: MainAxisSize.max,
+                                                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                                              crossAxisAlignment: CrossAxisAlignment.start,
                                                                           children: [
                                                                             Text(
                                                                               getJsonField(
@@ -1685,18 +1692,15 @@ class _NotesListWidgetState extends State<NotesListWidget>
                                                                         ),
                                                                       ),
                                                                       Padding(
-                                                                        padding: const EdgeInsetsDirectional
-                                                                            .fromSTEB(
+                                                                            padding: const EdgeInsetsDirectional.fromSTEB(
                                                                             0.0,
                                                                             8.0,
                                                                             0.0,
                                                                             0.0),
                                                                         child:
                                                                             Row(
-                                                                          mainAxisSize:
-                                                                              MainAxisSize.max,
-                                                                          mainAxisAlignment:
-                                                                              MainAxisAlignment.spaceBetween,
+                                                                              mainAxisSize: MainAxisSize.max,
+                                                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                                           children: [
                                                                             Container(
                                                                               decoration: BoxDecoration(
@@ -1896,9 +1900,7 @@ class _NotesListWidgetState extends State<NotesListWidget>
                                                                           ],
                                                                         ),
                                                                       ),
-                                                                    ].divide(SizedBox(
-                                                                        height:
-                                                                            8.0)),
+                                                                        ].divide(SizedBox(height: 8.0)),
                                                                   ),
                                                                 ),
                                                               ),
@@ -1907,8 +1909,8 @@ class _NotesListWidgetState extends State<NotesListWidget>
                                                         ),
                                                         Divider(
                                                           thickness: 1.0,
-                                                          color:
-                                                              Color(0xFFD9D9D9),
+                                                              color: Color(
+                                                                  0xFFD9D9D9),
                                                         ),
                                                       ].divide(SizedBox(
                                                           height: 8.0)),
@@ -1939,14 +1941,8 @@ class _NotesListWidgetState extends State<NotesListWidget>
               ),
             ),
           ),
-          )
-        );
+            ));
       },
     );
   }
 }
-
-
-
-
-

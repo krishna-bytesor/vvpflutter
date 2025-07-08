@@ -69,13 +69,13 @@ class _FilterWidgetState extends State<FilterWidget> {
     double headingFontSize = screenWidth < 400
         ? 16.0
         : screenWidth < 800
-            ? 18.0
-            : 20.0;
+        ? 18.0
+        : 20.0;
     double chipFontSize = screenWidth < 400
         ? 10.0
         : screenWidth < 800
-            ? 13.0
-            : 15.0;
+        ? 13.0
+        : 15.0;
     double chipSpacing = screenWidth < 400 ? 6.0 : screenWidth < 800 ? 12.0 : 16.0;
     double chipRowSpacing = screenWidth < 400 ? 6.0 : screenWidth < 800 ? 10.0 : 14.0;
     double chipBorderRadius = screenWidth < 400 ? 10.0 : screenWidth < 800 ? 16.0 : 20.0;
@@ -498,18 +498,18 @@ class _FilterWidgetState extends State<FilterWidget> {
                                                 .bodyMedium
                                                 .fontStyle,
                                           ),
-                                            color: FlutterFlowTheme.of(context)
-                                                .secondaryBackground,
-                                            letterSpacing: 0.0,
-                                            fontWeight:
-                                            FlutterFlowTheme.of(context)
-                                                .bodyMedium
-                                                .fontWeight,
-                                            fontStyle:
-                                            FlutterFlowTheme.of(context)
-                                                .bodyMedium
-                                                .fontStyle,
-                                          ),
+                                          color: FlutterFlowTheme.of(context)
+                                              .secondaryBackground,
+                                          letterSpacing: 0.0,
+                                          fontWeight:
+                                          FlutterFlowTheme.of(context)
+                                              .bodyMedium
+                                              .fontWeight,
+                                          fontStyle:
+                                          FlutterFlowTheme.of(context)
+                                              .bodyMedium
+                                              .fontStyle,
+                                        ),
                                         iconColor: Color(0x00000000),
                                         iconSize: 18.0,
                                         elevation: 4.0,
@@ -534,17 +534,17 @@ class _FilterWidgetState extends State<FilterWidget> {
                                                 .bodyMedium
                                                 .fontStyle,
                                           ),
-                                            color: Color(0xFF232323),
-                                            letterSpacing: 0.0,
-                                            fontWeight:
-                                            FlutterFlowTheme.of(context)
-                                                .bodyMedium
-                                                .fontWeight,
-                                            fontStyle:
-                                            FlutterFlowTheme.of(context)
-                                                .bodyMedium
-                                                .fontStyle,
-                                          ),
+                                          color: Color(0xFF232323),
+                                          letterSpacing: 0.0,
+                                          fontWeight:
+                                          FlutterFlowTheme.of(context)
+                                              .bodyMedium
+                                              .fontWeight,
+                                          fontStyle:
+                                          FlutterFlowTheme.of(context)
+                                              .bodyMedium
+                                              .fontStyle,
+                                        ),
                                         iconColor: Color(0x00000000),
                                         iconSize: 18.0,
                                         elevation: 0.0,
@@ -637,18 +637,18 @@ class _FilterWidgetState extends State<FilterWidget> {
                                                 .bodyMedium
                                                 .fontStyle,
                                           ),
-                                            color: FlutterFlowTheme.of(context)
-                                                .secondaryBackground,
-                                            letterSpacing: 0.0,
-                                            fontWeight:
-                                            FlutterFlowTheme.of(context)
-                                                .bodyMedium
-                                                .fontWeight,
-                                            fontStyle:
-                                            FlutterFlowTheme.of(context)
-                                                .bodyMedium
-                                                .fontStyle,
-                                          ),
+                                          color: FlutterFlowTheme.of(context)
+                                              .secondaryBackground,
+                                          letterSpacing: 0.0,
+                                          fontWeight:
+                                          FlutterFlowTheme.of(context)
+                                              .bodyMedium
+                                              .fontWeight,
+                                          fontStyle:
+                                          FlutterFlowTheme.of(context)
+                                              .bodyMedium
+                                              .fontStyle,
+                                        ),
                                         iconColor: Color(0x00000000),
                                         iconSize: 18.0,
                                         elevation: 4.0,
@@ -673,17 +673,17 @@ class _FilterWidgetState extends State<FilterWidget> {
                                                 .bodyMedium
                                                 .fontStyle,
                                           ),
-                                            color: Color(0xFF232323),
-                                            letterSpacing: 0.0,
-                                            fontWeight:
-                                            FlutterFlowTheme.of(context)
-                                                .bodyMedium
-                                                .fontWeight,
-                                            fontStyle:
-                                            FlutterFlowTheme.of(context)
-                                                .bodyMedium
-                                                .fontStyle,
-                                          ),
+                                          color: Color(0xFF232323),
+                                          letterSpacing: 0.0,
+                                          fontWeight:
+                                          FlutterFlowTheme.of(context)
+                                              .bodyMedium
+                                              .fontWeight,
+                                          fontStyle:
+                                          FlutterFlowTheme.of(context)
+                                              .bodyMedium
+                                              .fontStyle,
+                                        ),
                                         iconColor: Color(0x00000000),
                                         iconSize: 18.0,
                                         elevation: 0.0,
@@ -776,18 +776,18 @@ class _FilterWidgetState extends State<FilterWidget> {
                                                 .bodyMedium
                                                 .fontStyle,
                                           ),
-                                            color: FlutterFlowTheme.of(context)
-                                                .secondaryBackground,
-                                            letterSpacing: 0.0,
-                                            fontWeight:
-                                            FlutterFlowTheme.of(context)
-                                                .bodyMedium
-                                                .fontWeight,
-                                            fontStyle:
-                                            FlutterFlowTheme.of(context)
-                                                .bodyMedium
-                                                .fontStyle,
-                                          ),
+                                          color: FlutterFlowTheme.of(context)
+                                              .secondaryBackground,
+                                          letterSpacing: 0.0,
+                                          fontWeight:
+                                          FlutterFlowTheme.of(context)
+                                              .bodyMedium
+                                              .fontWeight,
+                                          fontStyle:
+                                          FlutterFlowTheme.of(context)
+                                              .bodyMedium
+                                              .fontStyle,
+                                        ),
                                         iconColor: Color(0x00000000),
                                         iconSize: 18.0,
                                         elevation: 4.0,
@@ -812,17 +812,17 @@ class _FilterWidgetState extends State<FilterWidget> {
                                                 .bodyMedium
                                                 .fontStyle,
                                           ),
-                                            color: Color(0xFF232323),
-                                            letterSpacing: 0.0,
-                                            fontWeight:
-                                            FlutterFlowTheme.of(context)
-                                                .bodyMedium
-                                                .fontWeight,
-                                            fontStyle:
-                                            FlutterFlowTheme.of(context)
-                                                .bodyMedium
-                                                .fontStyle,
-                                          ),
+                                          color: Color(0xFF232323),
+                                          letterSpacing: 0.0,
+                                          fontWeight:
+                                          FlutterFlowTheme.of(context)
+                                              .bodyMedium
+                                              .fontWeight,
+                                          fontStyle:
+                                          FlutterFlowTheme.of(context)
+                                              .bodyMedium
+                                              .fontStyle,
+                                        ),
                                         iconColor: Color(0x00000000),
                                         iconSize: 18.0,
                                         elevation: 0.0,
@@ -968,37 +968,33 @@ class _FilterWidgetState extends State<FilterWidget> {
                   ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(right: 12.0), // Adjust as needed
-                child: Align(
-                  alignment: AlignmentDirectional(1.0, -1.0),
-                  child: InkWell(
-                    splashColor: Colors.transparent,
-                    focusColor: Colors.transparent,
-                    hoverColor: Colors.transparent,
-                    highlightColor: Colors.transparent,
-                    onTap: () async {
-                      logFirebaseEvent('FILTER_COMP_Container_ft3iktlg_ON_TAP');
-                      logFirebaseEvent('Container_bottom_sheet');
-                      Navigator.pop(context);
-                    },
-                    child: Container(
-                      width: closeIconContainer,
-                      height: closeIconContainer,
-                      decoration: BoxDecoration(
-                        color: FlutterFlowTheme.of(context).primaryText,
-                        borderRadius: BorderRadius.circular(closeIconContainer),
-                      ),
-                      child: Icon(
-                        Icons.close,
-                        color: FlutterFlowTheme.of(context).primaryBackground,
-                        size: closeIconSize,
-                      ),
+              Align(
+                alignment: AlignmentDirectional(1.0, -1.0),
+                child: InkWell(
+                  splashColor: Colors.transparent,
+                  focusColor: Colors.transparent,
+                  hoverColor: Colors.transparent,
+                  highlightColor: Colors.transparent,
+                  onTap: () async {
+                    logFirebaseEvent('FILTER_COMP_Container_ft3iktlg_ON_TAP');
+                    logFirebaseEvent('Container_bottom_sheet');
+                    Navigator.pop(context);
+                  },
+                  child: Container(
+                    width: closeIconContainer,
+                    height: closeIconContainer,
+                    decoration: BoxDecoration(
+                      color: FlutterFlowTheme.of(context).primaryText,
+                      borderRadius: BorderRadius.circular(closeIconContainer),
+                    ),
+                    child: Icon(
+                      Icons.close,
+                      color: FlutterFlowTheme.of(context).primaryBackground,
+                      size: closeIconSize,
                     ),
                   ),
                 ),
               ),
-
             ],
           ),
         ],

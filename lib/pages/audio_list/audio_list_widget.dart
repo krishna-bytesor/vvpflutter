@@ -86,7 +86,11 @@ class _AudioListWidgetState extends State<AudioListWidget> {
         child: Scaffold(
           key: scaffoldKey,
           body: FutureBuilder<ApiCallResponse>(
+            // Use a unique key for the filter to force reload
+            key: ValueKey(_model.filter?.toMap().toString() ?? 'no_filter'),
             future: _model.audioListPage(
+              uniqueQueryKey: _model.filter?.toMap().toString(),
+              overrideCache: true,
               requestFn: () => LaravelGroup.postsListCall.call(
                 postTypeId: getJsonField(
                   widget.categoryItem,
@@ -115,6 +119,65 @@ class _AudioListWidgetState extends State<AudioListWidget> {
                 );
               }
               final containerPostsListResponse = snapshot.data!;
+              // Store the full unfiltered list once after API call
+              final allAudioList = LaravelGroup.postsListCall
+                      .dataList(
+                        containerPostsListResponse.jsonBody,
+                      )
+                      ?.toList() ??
+                  [];
+
+              // Print filter values for debugging
+              final filter = _model.filter;
+              print('FILTER DEBUG: filter = ${filter?.toMap()}');
+              print(
+                  'FILTER DEBUG: allAudioList.length = ${allAudioList.length}');
+
+              // Apply filter in-memory
+              List<dynamic> audioList = allAudioList;
+              if (filter != null &&
+                  ((filter.festival != null && filter.festival != '') ||
+                      (filter.place != null && filter.place != '') ||
+                      (filter.year != null && filter.year != '') ||
+                      (filter.language != null && filter.language != '') ||
+                      (filter.shloka != null && filter.shloka != ''))) {
+                audioList = allAudioList.where((e) {
+                  final matchesFestival = filter.festival == null ||
+                      filter.festival == '' ||
+                      getJsonField(e, r'$.festival').toString() ==
+                          filter.festival;
+                  final matchesYear = filter.year == null ||
+                      filter.year == '' ||
+                      dateTimeFormat(
+                            "yyyy",
+                            functions.stringToDate(
+                                getJsonField(e, r'$.date').toString()),
+                            locale: FFLocalizations.of(context).languageCode,
+                          ) ==
+                          filter.year;
+                  final matchesPlace = filter.place == null ||
+                      filter.place == '' ||
+                      getJsonField(e, r'$.city').toString() == filter.place;
+                  final matchesLanguage = filter.language == null ||
+                      filter.language == '' ||
+                      getJsonField(e, r'$.language').toString() ==
+                          filter.language;
+                  final matchesShloka = filter.shloka == null ||
+                      filter.shloka == '' ||
+                      (functions.combineTextFromJson(
+                              getJsonField(e, r'$.shloka_part').toString(),
+                              getJsonField(e, r'$.shloka_chapter')
+                                  .toString()) ==
+                          filter.shloka);
+                  return matchesFestival &&
+                      matchesYear &&
+                      matchesPlace &&
+                      matchesLanguage &&
+                      matchesShloka;
+                }).toList();
+              }
+              print(
+                  'FILTER DEBUG: filtered audioList.length = ${audioList.length}');
 
               return Container(
                 decoration: BoxDecoration(
@@ -133,7 +196,7 @@ class _AudioListWidgetState extends State<AudioListWidget> {
                 ),
                 child: Padding(
                   padding:
-                  const EdgeInsetsDirectional.fromSTEB(0.0, 40.0, 0.0, 0.0),
+                      const EdgeInsetsDirectional.fromSTEB(0.0, 40.0, 0.0, 0.0),
                   child: Column(
                     mainAxisSize: MainAxisSize.max,
                     children: [
@@ -161,27 +224,27 @@ class _AudioListWidgetState extends State<AudioListWidget> {
                                 widget.categoryItem,
                                 r'''$.name''',
                               ).toString().maybeHandleOverflow(
-                                maxChars: 20,
-                                replacement: '…',
-                              ),
+                                    maxChars: 20,
+                                    replacement: '…',
+                                  ),
                               textAlign: TextAlign.center,
                               maxLines: 1,
                               style: FlutterFlowTheme.of(context)
                                   .bodyMedium
                                   .override(
-                                font: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w600,
-                                  fontStyle: FlutterFlowTheme.of(context)
-                                      .bodyMedium
-                                      .fontStyle,
-                                ),
-                                fontSize: 20.0,
-                                letterSpacing: 0.0,
-                                fontWeight: FontWeight.w600,
-                                fontStyle: FlutterFlowTheme.of(context)
-                                    .bodyMedium
-                                    .fontStyle,
-                              ),
+                                    font: GoogleFonts.poppins(
+                                      fontWeight: FontWeight.w600,
+                                      fontStyle: FlutterFlowTheme.of(context)
+                                          .bodyMedium
+                                          .fontStyle,
+                                    ),
+                                    fontSize: 20.0,
+                                    letterSpacing: 0.0,
+                                    fontWeight: FontWeight.w600,
+                                    fontStyle: FlutterFlowTheme.of(context)
+                                        .bodyMedium
+                                        .fontStyle,
+                                  ),
                             ),
                           ),
                           Container(
@@ -211,128 +274,128 @@ class _AudioListWidgetState extends State<AudioListWidget> {
                                         },
                                         child: Padding(
                                           padding:
-                                          MediaQuery.viewInsetsOf(context),
+                                              MediaQuery.viewInsetsOf(context),
                                           child: FilterWidget(
                                             festivalList:
-                                            LaravelGroup.postsListCall
-                                                .dataList(
-                                              containerPostsListResponse
-                                                  .jsonBody,
-                                            )!
-                                                .map((e) => getJsonField(
-                                              e,
-                                              r'''$.festival''',
-                                            ))
-                                                .toList()
-                                                .map((e) => e.toString())
-                                                .toList(),
+                                                LaravelGroup.postsListCall
+                                                    .dataList(
+                                                      containerPostsListResponse
+                                                          .jsonBody,
+                                                    )!
+                                                    .map((e) => getJsonField(
+                                                          e,
+                                                          r'''$.festival''',
+                                                        ))
+                                                    .toList()
+                                                    .map((e) => e.toString())
+                                                    .toList(),
                                             yearList: LaravelGroup.postsListCall
                                                 .dataList(
-                                              containerPostsListResponse
-                                                  .jsonBody,
-                                            )!
+                                                  containerPostsListResponse
+                                                      .jsonBody,
+                                                )!
                                                 .unique((e) => dateTimeFormat(
-                                              "yyyy",
-                                              functions.stringToDate(
-                                                  getJsonField(
-                                                    e,
-                                                    r'''$.date''',
-                                                  ).toString()),
-                                              locale:
-                                              FFLocalizations.of(
-                                                  context)
-                                                  .languageCode,
-                                            ))
+                                                      "yyyy",
+                                                      functions.stringToDate(
+                                                          getJsonField(
+                                                        e,
+                                                        r'''$.date''',
+                                                      ).toString()),
+                                                      locale:
+                                                          FFLocalizations.of(
+                                                                  context)
+                                                              .languageCode,
+                                                    ))
                                                 .map((e) => dateTimeFormat(
-                                              "yyyy",
-                                              functions.stringToDate(
-                                                  getJsonField(
-                                                    e,
-                                                    r'''$.date''',
-                                                  ).toString()),
-                                              locale:
-                                              FFLocalizations.of(
-                                                  context)
-                                                  .languageCode,
-                                            ))
+                                                      "yyyy",
+                                                      functions.stringToDate(
+                                                          getJsonField(
+                                                        e,
+                                                        r'''$.date''',
+                                                      ).toString()),
+                                                      locale:
+                                                          FFLocalizations.of(
+                                                                  context)
+                                                              .languageCode,
+                                                    ))
                                                 .toList(),
                                             placeList:
-                                            LaravelGroup.postsListCall
-                                                .dataList(
-                                              containerPostsListResponse
-                                                  .jsonBody,
-                                            )!
-                                                .map((e) => getJsonField(
-                                              e,
-                                              r'''$.city''',
-                                            ))
-                                                .toList()
-                                                .map((e) => e.toString())
-                                                .toList(),
+                                                LaravelGroup.postsListCall
+                                                    .dataList(
+                                                      containerPostsListResponse
+                                                          .jsonBody,
+                                                    )!
+                                                    .map((e) => getJsonField(
+                                                          e,
+                                                          r'''$.city''',
+                                                        ))
+                                                    .toList()
+                                                    .map((e) => e.toString())
+                                                    .toList(),
                                             languageList:
-                                            LaravelGroup.postsListCall
-                                                .dataList(
-                                              containerPostsListResponse
-                                                  .jsonBody,
-                                            )!
-                                                .unique((e) => getJsonField(
-                                              e,
-                                              r'''$.language''',
-                                            ))
-                                                .map((e) => getJsonField(
-                                              e,
-                                              r'''$.language''',
-                                            ))
-                                                .toList()
-                                                .map((e) => e.toString())
-                                                .toList(),
+                                                LaravelGroup.postsListCall
+                                                    .dataList(
+                                                      containerPostsListResponse
+                                                          .jsonBody,
+                                                    )!
+                                                    .unique((e) => getJsonField(
+                                                          e,
+                                                          r'''$.language''',
+                                                        ))
+                                                    .map((e) => getJsonField(
+                                                          e,
+                                                          r'''$.language''',
+                                                        ))
+                                                    .toList()
+                                                    .map((e) => e.toString())
+                                                    .toList(),
                                             shlokaList: LaravelGroup
                                                 .postsListCall
                                                 .dataList(
-                                              containerPostsListResponse
-                                                  .jsonBody,
-                                            )!
+                                                  containerPostsListResponse
+                                                      .jsonBody,
+                                                )!
                                                 .map((e) => functions
-                                                .combineTextFromJson(
-                                                getJsonField(
-                                                  e,
-                                                  r'''$.shloka_part''',
-                                                ).toString(),
-                                                getJsonField(
-                                                  e,
-                                                  r'''$.shloka_chapter''',
-                                                ).toString()))
+                                                    .combineTextFromJson(
+                                                        getJsonField(
+                                                          e,
+                                                          r'''$.shloka_part''',
+                                                        ).toString(),
+                                                        getJsonField(
+                                                          e,
+                                                          r'''$.shloka_chapter''',
+                                                        ).toString()))
                                                 .toList(),
                                             languageInitial:
-                                            _model.languageInitial,
+                                                _model.languageInitial,
                                             yearInitial: _model.yearInitial,
                                             placeInitial: _model.placeInitial,
                                             festivalInitial:
-                                            _model.festivalInitial,
+                                                _model.festivalInitial,
                                             shlokaInitial: _model.shlokaInitial,
                                           ),
                                         ),
                                       ),
                                     );
                                   },
-                                ).then((value) =>
-                                    safeSetState(() => _model.filter = value));
-
-                                _model.languageInitial =
-                                    _model.filter?.language;
-                                _model.yearInitial = _model.filter?.year;
-                                _model.placeInitial = _model.filter?.place;
-                                _model.festivalInitial =
-                                    _model.filter?.festival;
-                                _model.shlokaInitial = _model.filter?.shloka;
-                                safeSetState(() {});
-
-                                safeSetState(() {});
+                                ).then((value) {
+                                  setState(() {
+                                    _model.filter = value;
+                                    _model.languageInitial =
+                                        _model.filter?.language;
+                                    _model.yearInitial = _model.filter?.year;
+                                    _model.placeInitial = _model.filter?.place;
+                                    _model.festivalInitial =
+                                        _model.filter?.festival;
+                                    _model.shlokaInitial =
+                                        _model.filter?.shloka;
+                                  });
+                                });
                               },
                               child: Icon(
                                 Icons.filter_alt_outlined,
                                 color:
-                                FlutterFlowTheme.of(context).secondaryText,
+                                    FlutterFlowTheme.of(context).secondaryText,
                                 size: 28,
                               ),
                             ),
@@ -342,81 +405,6 @@ class _AudioListWidgetState extends State<AudioListWidget> {
                       Flexible(
                         child: Builder(
                           builder: (context) {
-                            final audioList = ((_model.filter?.festival !=
-                                null &&
-                                _model.filter?.festival !=
-                                    '') ||
-                                (_model.filter?.place != null &&
-                                    _model.filter?.place != '') ||
-                                (_model.filter?.year != null &&
-                                    _model.filter?.year != '') ||
-                                (_model.filter?.language != null &&
-                                    _model.filter?.language !=
-                                        '') ||
-                                (_model.filter?.shloka != null &&
-                                    _model.filter?.shloka != '')
-                                ? LaravelGroup.postsListCall
-                                .dataList(
-                              containerPostsListResponse
-                                  .jsonBody,
-                            )
-                                ?.where((e) =>
-                            (_model.filter?.festival ==
-                                getJsonField(
-                                  e,
-                                  r'''$.country''',
-                                ).toString()) ||
-                                (_model.filter?.year ==
-                                    dateTimeFormat(
-                                      "yyyy",
-                                      functions.stringToDate(
-                                          getJsonField(
-                                            e,
-                                            r'''$.date''',
-                                          ).toString()),
-                                      locale:
-                                      FFLocalizations.of(
-                                          context)
-                                          .languageCode,
-                                    )) ||
-                                (_model.filter?.place ==
-                                    getJsonField(
-                                      e,
-                                      r'''$.city''',
-                                    ).toString()) ||
-                                (_model.filter?.language ==
-                                    getJsonField(
-                                      e,
-                                      r'''$.language''',
-                                    ).toString()) ||
-                                ((getJsonField(
-                                  functions
-                                      .parseStringto2stringJson(
-                                      _model.filter!
-                                          .shloka),
-                                  r'''$.part''',
-                                ) ==
-                                    getJsonField(
-                                      e,
-                                      r'''$.shloka_part''',
-                                    )) &&
-                                    (getJsonField(
-                                      functions
-                                          .parseStringto2stringJson(
-                                          _model.filter!
-                                              .shloka),
-                                      r'''$.chapter''',
-                                    ) ==
-                                        getJsonField(
-                                          e,
-                                          r'''$.shloka_chapter''',
-                                        ))))
-                                .toList()
-                                : LaravelGroup.postsListCall.dataList(
-                              containerPostsListResponse.jsonBody,
-                            ))
-                                ?.toList() ??
-                                [];
                             if (audioList.isEmpty) {
                               return EmptyWidget();
                             }
@@ -426,7 +414,7 @@ class _AudioListWidgetState extends State<AudioListWidget> {
                               scrollDirection: Axis.vertical,
                               itemCount: audioList.length,
                               separatorBuilder: (_, __) =>
-                              const SizedBox(height: 8.0),
+                                  const SizedBox(height: 8.0),
                               itemBuilder: (context, audioListIndex) {
                                 final audioListItem = audioList[audioListIndex];
                                 return Padding(
@@ -464,8 +452,8 @@ class _AudioListWidgetState extends State<AudioListWidget> {
                                                               r'$.data'))));
                                               final playlist = <MediaItem>[];
                                               for (int i = 0;
-                                              i < audioList.length;
-                                              i++) {
+                                                  i < audioList.length;
+                                                  i++) {
                                                 final item = audioList[i];
                                                 final url = urls[i];
                                                 final itemMap = {
@@ -476,7 +464,7 @@ class _AudioListWidgetState extends State<AudioListWidget> {
                                                   'artist': getJsonField(
                                                       item, r'$.author'),
                                                   'duration': getJsonField(item,
-                                                      r'$.duration') ??
+                                                          r'$.duration') ??
                                                       180,
                                                   'title': getJsonField(
                                                       item, r'$.title'),
@@ -504,12 +492,12 @@ class _AudioListWidgetState extends State<AudioListWidget> {
                                                 playlist.add(
                                                     await MediaItemConverter
                                                         .mapToMediaItem(
-                                                        itemMap));
+                                                            itemMap));
                                               }
                                               await (pageManager.audioHandler
-                                              as MyAudioHandler)
+                                                      as MyAudioHandler)
                                                   .setNewPlaylist(
-                                                  playlist, audioListIndex);
+                                                      playlist, audioListIndex);
                                             });
                                             // Immediately open MainPlayerView
                                             Navigator.push(
@@ -517,7 +505,7 @@ class _AudioListWidgetState extends State<AudioListWidget> {
                                               PageRouteBuilder(
                                                 opaque: false,
                                                 pageBuilder: (_, ___, __) =>
-                                                const MainPlayerView(),
+                                                    const MainPlayerView(),
                                               ),
                                             );
                                           },
@@ -525,14 +513,14 @@ class _AudioListWidgetState extends State<AudioListWidget> {
                                             mainAxisSize: MainAxisSize.max,
                                             children: [
                                               if (getJsonField(
-                                                audioListItem,
-                                                r'''$.image''',
-                                              ) !=
+                                                    audioListItem,
+                                                    r'''$.image''',
+                                                  ) !=
                                                   null)
                                                 ClipRRect(
                                                   borderRadius:
-                                                  BorderRadius.circular(
-                                                      8.0),
+                                                      BorderRadius.circular(
+                                                          8.0),
                                                   child: Image.network(
                                                     getJsonField(
                                                       audioListItem,
@@ -542,25 +530,25 @@ class _AudioListWidgetState extends State<AudioListWidget> {
                                                     height: 104.0,
                                                     fit: BoxFit.cover,
                                                     errorBuilder: (context,
-                                                        error,
-                                                        stackTrace) =>
+                                                            error,
+                                                            stackTrace) =>
                                                         Image.asset(
-                                                          'assets/images/error_image.png',
-                                                          width: 104.0,
-                                                          height: 104.0,
-                                                          fit: BoxFit.cover,
-                                                        ),
+                                                      'assets/images/error_image.png',
+                                                      width: 104.0,
+                                                      height: 104.0,
+                                                      fit: BoxFit.cover,
+                                                    ),
                                                   ),
                                                 ),
                                               if (getJsonField(
-                                                audioListItem,
-                                                r'''$.image''',
-                                              ) ==
+                                                    audioListItem,
+                                                    r'''$.image''',
+                                                  ) ==
                                                   null)
                                                 ClipRRect(
                                                   borderRadius:
-                                                  BorderRadius.circular(
-                                                      8.0),
+                                                      BorderRadius.circular(
+                                                          8.0),
                                                   child: Image.asset(
                                                     'assets/images/AboutImage.png',
                                                     width: 104.0,
@@ -573,39 +561,39 @@ class _AudioListWidgetState extends State<AudioListWidget> {
                                               Flexible(
                                                 child: Padding(
                                                   padding:
-                                                  const EdgeInsetsDirectional
-                                                      .fromSTEB(
-                                                      16.0, 0.0, 16.0, 0.0),
+                                                      const EdgeInsetsDirectional
+                                                          .fromSTEB(
+                                                          16.0, 0.0, 16.0, 0.0),
                                                   child: Column(
                                                     mainAxisSize:
-                                                    MainAxisSize.max,
+                                                        MainAxisSize.max,
                                                     mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
+                                                        MainAxisAlignment
+                                                            .spaceBetween,
                                                     crossAxisAlignment:
-                                                    CrossAxisAlignment
-                                                        .start,
+                                                        CrossAxisAlignment
+                                                            .start,
                                                     children: [
                                                       SingleChildScrollView(
                                                         scrollDirection:
-                                                        Axis.horizontal,
+                                                            Axis.horizontal,
                                                         child: Row(
                                                           mainAxisSize:
-                                                          MainAxisSize.max,
+                                                              MainAxisSize.max,
                                                           mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .spaceBetween,
+                                                              MainAxisAlignment
+                                                                  .spaceBetween,
                                                           crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
+                                                              CrossAxisAlignment
+                                                                  .start,
                                                           children: [
                                                             SingleChildScrollView(
                                                               scrollDirection:
-                                                              Axis.horizontal,
+                                                                  Axis.horizontal,
                                                               child: Row(
                                                                 mainAxisSize:
-                                                                MainAxisSize
-                                                                    .max,
+                                                                    MainAxisSize
+                                                                        .max,
                                                                 children: [
                                                                   Text(
                                                                     getJsonField(
@@ -613,28 +601,28 @@ class _AudioListWidgetState extends State<AudioListWidget> {
                                                                       r'''$.title''',
                                                                     ).toString(),
                                                                     style: FlutterFlowTheme.of(
-                                                                        context)
+                                                                            context)
                                                                         .bodyMedium
                                                                         .override(
-                                                                      font:
-                                                                      GoogleFonts.poppins(
-                                                                        fontWeight:
-                                                                        FontWeight.w500,
-                                                                        fontStyle:
-                                                                        FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                      ),
-                                                                      color:
-                                                                      Color(0xFF232323),
-                                                                      fontSize:
-                                                                      16,
-                                                                      letterSpacing:
-                                                                      0.0,
-                                                                      fontWeight:
-                                                                      FontWeight.w500,
-                                                                      fontStyle: FlutterFlowTheme.of(context)
-                                                                          .bodyMedium
-                                                                          .fontStyle,
-                                                                    ),
+                                                                          font:
+                                                                              GoogleFonts.poppins(
+                                                                            fontWeight:
+                                                                                FontWeight.w500,
+                                                                            fontStyle:
+                                                                                FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                          ),
+                                                                          color:
+                                                                              Color(0xFF232323),
+                                                                          fontSize:
+                                                                              16,
+                                                                          letterSpacing:
+                                                                              0.0,
+                                                                          fontWeight:
+                                                                              FontWeight.w500,
+                                                                          fontStyle: FlutterFlowTheme.of(context)
+                                                                              .bodyMedium
+                                                                              .fontStyle,
+                                                                        ),
                                                                   ),
                                                                 ],
                                                               ),
@@ -647,23 +635,23 @@ class _AudioListWidgetState extends State<AudioListWidget> {
                                                         spacing: 0,
                                                         runSpacing: 0,
                                                         alignment:
-                                                        WrapAlignment.start,
+                                                            WrapAlignment.start,
                                                         crossAxisAlignment:
-                                                        WrapCrossAlignment
-                                                            .start,
+                                                            WrapCrossAlignment
+                                                                .start,
                                                         direction:
-                                                        Axis.horizontal,
+                                                            Axis.horizontal,
                                                         runAlignment:
-                                                        WrapAlignment.start,
+                                                            WrapAlignment.start,
                                                         verticalDirection:
-                                                        VerticalDirection
-                                                            .down,
+                                                            VerticalDirection
+                                                                .down,
                                                         clipBehavior: Clip.none,
                                                         children: [
                                                           if (getJsonField(
-                                                            audioListItem,
-                                                            r'''$.shloka_part''',
-                                                          ) !=
+                                                                audioListItem,
+                                                                r'''$.shloka_part''',
+                                                              ) !=
                                                               null)
                                                             Text(
                                                               valueOrDefault<
@@ -680,60 +668,60 @@ class _AudioListWidgetState extends State<AudioListWidget> {
                                                                 '-',
                                                               ),
                                                               style: FlutterFlowTheme
-                                                                  .of(context)
+                                                                      .of(context)
                                                                   .bodyMedium
                                                                   .override(
-                                                                font: GoogleFonts
-                                                                    .poppins(
-                                                                  fontWeight:
-                                                                  FontWeight
-                                                                      .w500,
-                                                                  fontStyle: FlutterFlowTheme.of(
-                                                                      context)
-                                                                      .bodyMedium
-                                                                      .fontStyle,
-                                                                ),
-                                                                color: FlutterFlowTheme.of(
-                                                                    context)
-                                                                    .backGrey,
-                                                                fontSize:
-                                                                13,
-                                                                letterSpacing:
-                                                                0.0,
-                                                                fontWeight:
-                                                                FontWeight
-                                                                    .w500,
-                                                                fontStyle: FlutterFlowTheme.of(
-                                                                    context)
-                                                                    .bodyMedium
-                                                                    .fontStyle,
-                                                                lineHeight:
-                                                                1.5,
-                                                              ),
+                                                                    font: GoogleFonts
+                                                                        .poppins(
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .w500,
+                                                                      fontStyle: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .bodyMedium
+                                                                          .fontStyle,
+                                                                    ),
+                                                                    color: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .backGrey,
+                                                                    fontSize:
+                                                                        13,
+                                                                    letterSpacing:
+                                                                        0.0,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w500,
+                                                                    fontStyle: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .bodyMedium
+                                                                        .fontStyle,
+                                                                    lineHeight:
+                                                                        1.5,
+                                                                  ),
                                                             ),
                                                           if ((getJsonField(
-                                                            audioListItem,
-                                                            r'''$.shloka_part''',
-                                                          ) !=
-                                                              null) &&
+                                                                    audioListItem,
+                                                                    r'''$.shloka_part''',
+                                                                  ) !=
+                                                                  null) &&
                                                               (getJsonField(
-                                                                audioListItem,
-                                                                r'''$.author''',
-                                                              ) !=
+                                                                    audioListItem,
+                                                                    r'''$.author''',
+                                                                  ) !=
                                                                   null))
                                                             SizedBox(
                                                               height: 16,
                                                               child:
-                                                              VerticalDivider(
+                                                                  VerticalDivider(
                                                                 thickness: 1,
                                                                 color: Color(
                                                                     0xFF7ECBC9),
                                                               ),
                                                             ),
                                                           if (getJsonField(
-                                                            audioListItem,
-                                                            r'''$.author''',
-                                                          ) !=
+                                                                audioListItem,
+                                                                r'''$.author''',
+                                                              ) !=
                                                               null)
                                                             Text(
                                                               getJsonField(
@@ -741,60 +729,60 @@ class _AudioListWidgetState extends State<AudioListWidget> {
                                                                 r'''$.author''',
                                                               ).toString(),
                                                               style: FlutterFlowTheme
-                                                                  .of(context)
+                                                                      .of(context)
                                                                   .bodyMedium
                                                                   .override(
-                                                                font: GoogleFonts
-                                                                    .poppins(
-                                                                  fontWeight:
-                                                                  FontWeight
-                                                                      .w500,
-                                                                  fontStyle: FlutterFlowTheme.of(
-                                                                      context)
-                                                                      .bodyMedium
-                                                                      .fontStyle,
-                                                                ),
-                                                                color: FlutterFlowTheme.of(
-                                                                    context)
-                                                                    .backGrey,
-                                                                fontSize:
-                                                                13,
-                                                                letterSpacing:
-                                                                0.0,
-                                                                fontWeight:
-                                                                FontWeight
-                                                                    .w500,
-                                                                fontStyle: FlutterFlowTheme.of(
-                                                                    context)
-                                                                    .bodyMedium
-                                                                    .fontStyle,
-                                                                lineHeight:
-                                                                1.5,
-                                                              ),
+                                                                    font: GoogleFonts
+                                                                        .poppins(
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .w500,
+                                                                      fontStyle: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .bodyMedium
+                                                                          .fontStyle,
+                                                                    ),
+                                                                    color: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .backGrey,
+                                                                    fontSize:
+                                                                        13,
+                                                                    letterSpacing:
+                                                                        0.0,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w500,
+                                                                    fontStyle: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .bodyMedium
+                                                                        .fontStyle,
+                                                                    lineHeight:
+                                                                        1.5,
+                                                                  ),
                                                             ),
                                                           if ((getJsonField(
-                                                            audioListItem,
-                                                            r'''$.author''',
-                                                          ) !=
-                                                              null) &&
+                                                                    audioListItem,
+                                                                    r'''$.author''',
+                                                                  ) !=
+                                                                  null) &&
                                                               (getJsonField(
-                                                                audioListItem,
-                                                                r'''$.date''',
-                                                              ) !=
+                                                                    audioListItem,
+                                                                    r'''$.date''',
+                                                                  ) !=
                                                                   null))
                                                             SizedBox(
                                                               height: 16,
                                                               child:
-                                                              VerticalDivider(
+                                                                  VerticalDivider(
                                                                 thickness: 1,
                                                                 color: Color(
                                                                     0xFF7ECBC9),
                                                               ),
                                                             ),
                                                           if (getJsonField(
-                                                            audioListItem,
-                                                            r'''$.date''',
-                                                          ) !=
+                                                                audioListItem,
+                                                                r'''$.date''',
+                                                              ) !=
                                                               null)
                                                             Text(
                                                               valueOrDefault<
@@ -803,126 +791,126 @@ class _AudioListWidgetState extends State<AudioListWidget> {
                                                                   "yyyy",
                                                                   functions
                                                                       .stringToDate(
-                                                                      getJsonField(
-                                                                        audioListItem,
-                                                                        r'''$.date''',
-                                                                      ).toString()),
+                                                                          getJsonField(
+                                                                    audioListItem,
+                                                                    r'''$.date''',
+                                                                  ).toString()),
                                                                   locale: FFLocalizations.of(
-                                                                      context)
+                                                                          context)
                                                                       .languageCode,
                                                                 ),
                                                                 '-',
                                                               ),
                                                               style: FlutterFlowTheme
-                                                                  .of(context)
+                                                                      .of(context)
                                                                   .bodyMedium
                                                                   .override(
-                                                                font: GoogleFonts
-                                                                    .poppins(
-                                                                  fontWeight:
-                                                                  FontWeight
-                                                                      .w500,
-                                                                  fontStyle: FlutterFlowTheme.of(
-                                                                      context)
-                                                                      .bodyMedium
-                                                                      .fontStyle,
-                                                                ),
-                                                                color: FlutterFlowTheme.of(
-                                                                    context)
-                                                                    .backGrey,
-                                                                fontSize:
-                                                                13,
-                                                                letterSpacing:
-                                                                0.0,
-                                                                fontWeight:
-                                                                FontWeight
-                                                                    .w500,
-                                                                fontStyle: FlutterFlowTheme.of(
-                                                                    context)
-                                                                    .bodyMedium
-                                                                    .fontStyle,
-                                                                lineHeight:
-                                                                1.5,
-                                                              ),
+                                                                    font: GoogleFonts
+                                                                        .poppins(
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .w500,
+                                                                      fontStyle: FlutterFlowTheme.of(
+                                                                              context)
+                                                                          .bodyMedium
+                                                                          .fontStyle,
+                                                                    ),
+                                                                    color: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .backGrey,
+                                                                    fontSize:
+                                                                        13,
+                                                                    letterSpacing:
+                                                                        0.0,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w500,
+                                                                    fontStyle: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .bodyMedium
+                                                                        .fontStyle,
+                                                                    lineHeight:
+                                                                        1.5,
+                                                                  ),
                                                             ),
                                                         ],
                                                       ),
                                                       Padding(
                                                         padding:
-                                                        const EdgeInsetsDirectional
-                                                            .fromSTEB(0.0,
-                                                            8.0, 0.0, 0.0),
+                                                            const EdgeInsetsDirectional
+                                                                .fromSTEB(0.0,
+                                                                8.0, 0.0, 0.0),
                                                         child: Row(
                                                           mainAxisSize:
-                                                          MainAxisSize.max,
+                                                              MainAxisSize.max,
                                                           mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .spaceBetween,
+                                                              MainAxisAlignment
+                                                                  .spaceBetween,
                                                           children: [
                                                             Container(
                                                               decoration:
-                                                              BoxDecoration(
+                                                                  BoxDecoration(
                                                                 color: FlutterFlowTheme.of(
-                                                                    context)
+                                                                        context)
                                                                     .primaryText,
                                                                 borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                    20.0),
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            20.0),
                                                                 shape: BoxShape
                                                                     .rectangle,
                                                               ),
                                                               alignment:
-                                                              AlignmentDirectional(
-                                                                  0.0, 0.0),
+                                                                  AlignmentDirectional(
+                                                                      0.0, 0.0),
                                                               child: Padding(
                                                                 padding:
-                                                                EdgeInsetsDirectional
-                                                                    .fromSTEB(
-                                                                    6.0,
-                                                                    3.0,
-                                                                    12.0,
-                                                                    3.0),
+                                                                    EdgeInsetsDirectional
+                                                                        .fromSTEB(
+                                                                            6.0,
+                                                                            3.0,
+                                                                            12.0,
+                                                                            3.0),
                                                                 child: Row(
                                                                   mainAxisSize:
-                                                                  MainAxisSize
-                                                                      .max,
+                                                                      MainAxisSize
+                                                                          .max,
                                                                   children: [
                                                                     Icon(
                                                                       Icons
                                                                           .play_arrow,
                                                                       color: FlutterFlowTheme.of(
-                                                                          context)
+                                                                              context)
                                                                           .secondaryBackground,
                                                                       size:
-                                                                      18.0,
+                                                                          18.0,
                                                                     ),
                                                                     Text(
                                                                       FFLocalizations.of(
-                                                                          context)
+                                                                              context)
                                                                           .getText(
                                                                         'bqcznszn' /* Play */,
                                                                       ),
                                                                       style: FlutterFlowTheme.of(
-                                                                          context)
+                                                                              context)
                                                                           .bodyMedium
                                                                           .override(
-                                                                        font:
-                                                                        GoogleFonts.poppins(
-                                                                          fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
-                                                                          fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                        ),
-                                                                        color:
-                                                                        FlutterFlowTheme.of(context).secondaryBackground,
-                                                                        fontSize:
-                                                                        13.0,
-                                                                        letterSpacing:
-                                                                        0.0,
-                                                                        fontWeight:
-                                                                        FlutterFlowTheme.of(context).bodyMedium.fontWeight,
-                                                                        fontStyle:
-                                                                        FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                      ),
+                                                                            font:
+                                                                                GoogleFonts.poppins(
+                                                                              fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                              fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                            ),
+                                                                            color:
+                                                                                FlutterFlowTheme.of(context).secondaryBackground,
+                                                                            fontSize:
+                                                                                13.0,
+                                                                            letterSpacing:
+                                                                                0.0,
+                                                                            fontWeight:
+                                                                                FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                            fontStyle:
+                                                                                FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                          ),
                                                                     ),
                                                                   ],
                                                                 ),
@@ -930,162 +918,162 @@ class _AudioListWidgetState extends State<AudioListWidget> {
                                                             ),
                                                             Row(
                                                               mainAxisSize:
-                                                              MainAxisSize
-                                                                  .max,
+                                                                  MainAxisSize
+                                                                      .max,
                                                               mainAxisAlignment:
-                                                              MainAxisAlignment
-                                                                  .end,
+                                                                  MainAxisAlignment
+                                                                      .end,
                                                               children: [
                                                                 if (functions
                                                                     .isFavourite(
-                                                                    getJsonField(
-                                                                      audioListItem,
-                                                                      r'''$.id''',
-                                                                    ),
-                                                                    FFAppState()
-                                                                        .FavouriteList
-                                                                        .toList()))
+                                                                        getJsonField(
+                                                                          audioListItem,
+                                                                          r'''$.id''',
+                                                                        ),
+                                                                        FFAppState()
+                                                                            .FavouriteList
+                                                                            .toList()))
                                                                   InkWell(
                                                                     splashColor:
-                                                                    Colors
-                                                                        .transparent,
+                                                                        Colors
+                                                                            .transparent,
                                                                     focusColor:
-                                                                    Colors
-                                                                        .transparent,
+                                                                        Colors
+                                                                            .transparent,
                                                                     hoverColor:
-                                                                    Colors
-                                                                        .transparent,
+                                                                        Colors
+                                                                            .transparent,
                                                                     highlightColor:
-                                                                    Colors
-                                                                        .transparent,
+                                                                        Colors
+                                                                            .transparent,
                                                                     onTap:
                                                                         () async {
                                                                       await action_blocks
                                                                           .likeUnlikePost(
                                                                         context,
                                                                         postItem:
-                                                                        audioListItem,
+                                                                            audioListItem,
                                                                       );
                                                                     },
                                                                     child:
-                                                                    Container(
+                                                                        Container(
                                                                       width:
-                                                                      28.0,
+                                                                          28.0,
                                                                       height:
-                                                                      28.0,
+                                                                          28.0,
                                                                       decoration:
-                                                                      BoxDecoration(
+                                                                          BoxDecoration(
                                                                         color: FlutterFlowTheme.of(context)
                                                                             .secondaryBackground,
                                                                         shape: BoxShape
                                                                             .circle,
                                                                       ),
                                                                       alignment:
-                                                                      AlignmentDirectional(
-                                                                          0.0,
-                                                                          0.0),
+                                                                          AlignmentDirectional(
+                                                                              0.0,
+                                                                              0.0),
                                                                       child:
-                                                                      Icon(
+                                                                          Icon(
                                                                         Icons
                                                                             .favorite,
                                                                         color: FlutterFlowTheme.of(context)
                                                                             .primaryText,
                                                                         size:
-                                                                        18.0,
+                                                                            18.0,
                                                                       ),
                                                                     ),
                                                                   ),
                                                                 if (!functions
                                                                     .isFavourite(
-                                                                    getJsonField(
-                                                                      audioListItem,
-                                                                      r'''$.id''',
-                                                                    ),
-                                                                    FFAppState()
-                                                                        .FavouriteList
-                                                                        .toList()))
+                                                                        getJsonField(
+                                                                          audioListItem,
+                                                                          r'''$.id''',
+                                                                        ),
+                                                                        FFAppState()
+                                                                            .FavouriteList
+                                                                            .toList()))
                                                                   InkWell(
                                                                     splashColor:
-                                                                    Colors
-                                                                        .transparent,
+                                                                        Colors
+                                                                            .transparent,
                                                                     focusColor:
-                                                                    Colors
-                                                                        .transparent,
+                                                                        Colors
+                                                                            .transparent,
                                                                     hoverColor:
-                                                                    Colors
-                                                                        .transparent,
+                                                                        Colors
+                                                                            .transparent,
                                                                     highlightColor:
-                                                                    Colors
-                                                                        .transparent,
+                                                                        Colors
+                                                                            .transparent,
                                                                     onTap:
                                                                         () async {
                                                                       await action_blocks
                                                                           .likeUnlikePost(
                                                                         context,
                                                                         postItem:
-                                                                        audioListItem,
+                                                                            audioListItem,
                                                                       );
                                                                     },
                                                                     child:
-                                                                    Container(
+                                                                        Container(
                                                                       width:
-                                                                      28.0,
+                                                                          28.0,
                                                                       height:
-                                                                      28.0,
+                                                                          28.0,
                                                                       decoration:
-                                                                      BoxDecoration(
+                                                                          BoxDecoration(
                                                                         color: FlutterFlowTheme.of(context)
                                                                             .secondaryBackground,
                                                                         shape: BoxShape
                                                                             .circle,
                                                                       ),
                                                                       alignment:
-                                                                      AlignmentDirectional(
-                                                                          0.0,
-                                                                          0.0),
+                                                                          AlignmentDirectional(
+                                                                              0.0,
+                                                                              0.0),
                                                                       child:
-                                                                      Icon(
+                                                                          Icon(
                                                                         Icons
                                                                             .favorite_border,
                                                                         color: FlutterFlowTheme.of(context)
                                                                             .primaryText,
                                                                         size:
-                                                                        18.0,
+                                                                            18.0,
                                                                       ),
                                                                     ),
                                                                   ),
                                                                 InkWell(
                                                                   splashColor:
-                                                                  Colors
-                                                                      .transparent,
+                                                                      Colors
+                                                                          .transparent,
                                                                   focusColor: Colors
                                                                       .transparent,
                                                                   hoverColor: Colors
                                                                       .transparent,
                                                                   highlightColor:
-                                                                  Colors
-                                                                      .transparent,
+                                                                      Colors
+                                                                          .transparent,
                                                                   onTap:
                                                                       () async {
                                                                     await showModalBottomSheet(
                                                                       isScrollControlled:
-                                                                      true,
+                                                                          true,
                                                                       backgroundColor:
-                                                                      Colors
-                                                                          .transparent,
+                                                                          Colors
+                                                                              .transparent,
                                                                       enableDrag:
-                                                                      false,
+                                                                          false,
                                                                       context:
-                                                                      context,
+                                                                          context,
                                                                       builder:
                                                                           (context) {
                                                                         return WebViewAware(
                                                                           child:
-                                                                          GestureDetector(
+                                                                              GestureDetector(
                                                                             onTap: () =>
                                                                                 FocusScope.of(context).unfocus(),
                                                                             child:
-                                                                            Padding(
+                                                                                Padding(
                                                                               padding: MediaQuery.viewInsetsOf(context),
                                                                               child: NotesWidget(
                                                                                 post: audioListItem,
@@ -1096,68 +1084,68 @@ class _AudioListWidgetState extends State<AudioListWidget> {
                                                                       },
                                                                     ).then((value) =>
                                                                         safeSetState(
-                                                                                () {}));
+                                                                            () {}));
                                                                   },
                                                                   child:
-                                                                  Container(
+                                                                      Container(
                                                                     width: 28.0,
                                                                     height:
-                                                                    28.0,
+                                                                        28.0,
                                                                     decoration:
-                                                                    BoxDecoration(
+                                                                        BoxDecoration(
                                                                       color: FlutterFlowTheme.of(
-                                                                          context)
+                                                                              context)
                                                                           .secondaryBackground,
                                                                       shape: BoxShape
                                                                           .circle,
                                                                     ),
                                                                     alignment:
-                                                                    AlignmentDirectional(
-                                                                        0.0,
-                                                                        0.0),
+                                                                        AlignmentDirectional(
+                                                                            0.0,
+                                                                            0.0),
                                                                     child: Icon(
                                                                       Icons
                                                                           .edit_note_outlined,
                                                                       color: FlutterFlowTheme.of(
-                                                                          context)
+                                                                              context)
                                                                           .primaryText,
                                                                       size:
-                                                                      18.0,
+                                                                          18.0,
                                                                     ),
                                                                   ),
                                                                 ),
                                                                 InkWell(
                                                                   splashColor:
-                                                                  Colors
-                                                                      .transparent,
+                                                                      Colors
+                                                                          .transparent,
                                                                   focusColor: Colors
                                                                       .transparent,
                                                                   hoverColor: Colors
                                                                       .transparent,
                                                                   highlightColor:
-                                                                  Colors
-                                                                      .transparent,
+                                                                      Colors
+                                                                          .transparent,
                                                                   onTap:
                                                                       () async {
                                                                     await showModalBottomSheet(
                                                                       isScrollControlled:
-                                                                      true,
+                                                                          true,
                                                                       backgroundColor:
-                                                                      Colors
-                                                                          .transparent,
+                                                                          Colors
+                                                                              .transparent,
                                                                       enableDrag:
-                                                                      false,
+                                                                          false,
                                                                       context:
-                                                                      context,
+                                                                          context,
                                                                       builder:
                                                                           (context) {
                                                                         return WebViewAware(
                                                                           child:
-                                                                          GestureDetector(
+                                                                              GestureDetector(
                                                                             onTap: () =>
                                                                                 FocusScope.of(context).unfocus(),
                                                                             child:
-                                                                            Padding(
+                                                                                Padding(
                                                                               padding: MediaQuery.viewInsetsOf(context),
                                                                               child: SavetoPlaylistWidget(
                                                                                 post: audioListItem,
@@ -1168,33 +1156,33 @@ class _AudioListWidgetState extends State<AudioListWidget> {
                                                                       },
                                                                     ).then((value) =>
                                                                         safeSetState(
-                                                                                () {}));
+                                                                            () {}));
                                                                   },
                                                                   child:
-                                                                  Container(
+                                                                      Container(
                                                                     width: 28.0,
                                                                     height:
-                                                                    28.0,
+                                                                        28.0,
                                                                     decoration:
-                                                                    BoxDecoration(
+                                                                        BoxDecoration(
                                                                       color: FlutterFlowTheme.of(
-                                                                          context)
+                                                                              context)
                                                                           .secondaryBackground,
                                                                       shape: BoxShape
                                                                           .circle,
                                                                     ),
                                                                     alignment:
-                                                                    AlignmentDirectional(
-                                                                        0.0,
-                                                                        0.0),
+                                                                        AlignmentDirectional(
+                                                                            0.0,
+                                                                            0.0),
                                                                     child: Icon(
                                                                       Icons
                                                                           .playlist_add,
                                                                       color: FlutterFlowTheme.of(
-                                                                          context)
+                                                                              context)
                                                                           .primaryText,
                                                                       size:
-                                                                      18.0,
+                                                                          18.0,
                                                                     ),
                                                                   ),
                                                                 ),
@@ -1202,54 +1190,54 @@ class _AudioListWidgetState extends State<AudioListWidget> {
                                                                     .HideShare)
                                                                   InkWell(
                                                                     splashColor:
-                                                                    Colors
-                                                                        .transparent,
+                                                                        Colors
+                                                                            .transparent,
                                                                     focusColor:
-                                                                    Colors
-                                                                        .transparent,
+                                                                        Colors
+                                                                            .transparent,
                                                                     hoverColor:
-                                                                    Colors
-                                                                        .transparent,
+                                                                        Colors
+                                                                            .transparent,
                                                                     highlightColor:
-                                                                    Colors
-                                                                        .transparent,
+                                                                        Colors
+                                                                            .transparent,
                                                                     onTap:
                                                                         () async {
                                                                       await action_blocks
                                                                           .allShare(
                                                                         context,
                                                                         url:
-                                                                        getJsonField(
+                                                                            getJsonField(
                                                                           audioListItem,
                                                                           r'''$.data''',
                                                                         ).toString(),
                                                                       );
                                                                     },
                                                                     child:
-                                                                    Container(
+                                                                        Container(
                                                                       width:
-                                                                      28.0,
+                                                                          28.0,
                                                                       height:
-                                                                      28.0,
+                                                                          28.0,
                                                                       decoration:
-                                                                      BoxDecoration(
+                                                                          BoxDecoration(
                                                                         color: FlutterFlowTheme.of(context)
                                                                             .secondaryBackground,
                                                                         shape: BoxShape
                                                                             .circle,
                                                                       ),
                                                                       alignment:
-                                                                      AlignmentDirectional(
-                                                                          0.0,
-                                                                          0.0),
+                                                                          AlignmentDirectional(
+                                                                              0.0,
+                                                                              0.0),
                                                                       child:
-                                                                      FaIcon(
+                                                                          FaIcon(
                                                                         FontAwesomeIcons
                                                                             .share,
                                                                         color: FlutterFlowTheme.of(context)
                                                                             .primaryText,
                                                                         size:
-                                                                        18.0,
+                                                                            18.0,
                                                                       ),
                                                                     ),
                                                                   ),
@@ -1257,33 +1245,33 @@ class _AudioListWidgetState extends State<AudioListWidget> {
                                                                   Container(
                                                                     width: 28.0,
                                                                     height:
-                                                                    28.0,
+                                                                        28.0,
                                                                     decoration:
-                                                                    BoxDecoration(
+                                                                        BoxDecoration(
                                                                       color: FlutterFlowTheme.of(
-                                                                          context)
+                                                                              context)
                                                                           .secondaryBackground,
                                                                       shape: BoxShape
                                                                           .circle,
                                                                     ),
                                                                     alignment:
-                                                                    AlignmentDirectional(
-                                                                        0.0,
-                                                                        0.0),
+                                                                        AlignmentDirectional(
+                                                                            0.0,
+                                                                            0.0),
                                                                     child: Icon(
                                                                       Icons
                                                                           .file_download_outlined,
                                                                       color: FlutterFlowTheme.of(
-                                                                          context)
+                                                                              context)
                                                                           .primaryText,
                                                                       size:
-                                                                      18.0,
+                                                                          18.0,
                                                                     ),
                                                                   ),
                                                               ].divide(
                                                                   const SizedBox(
                                                                       width:
-                                                                      4.0)),
+                                                                          4.0)),
                                                             ),
                                                           ],
                                                         ),

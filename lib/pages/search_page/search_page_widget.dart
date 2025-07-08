@@ -1,5 +1,10 @@
 import 'package:v_v_p_swami/audio_helpers/main_player/main_player.dart';
 import 'package:v_v_p_swami/audio_helpers/player_invoke.dart';
+import 'package:v_v_p_swami/audio_helpers/page_manager.dart';
+import 'package:v_v_p_swami/audio_helpers/service_locator.dart';
+import 'package:v_v_p_swami/audio_helpers/mediaitem_converter.dart';
+import 'package:v_v_p_swami/audio_helpers/audio_handler.dart';
+import 'package:audio_service/audio_service.dart';
 
 import '/backend/api_requests/api_calls.dart';
 import '/components/bottom_nav_bar/bottom_nav_bar_widget.dart';
@@ -63,9 +68,71 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
     super.dispose();
   }
 
+  Future<String> getPlayableUrl(dynamic url) async {
+    final urlStr = url.toString();
+    if (urlStr.contains('youtube.com') || urlStr.contains('youtu.be')) {
+      final ytAudioUrl = await getYouTubeAudioStreamUrl(urlStr);
+      return ytAudioUrl ?? urlStr;
+    }
+    return urlStr;
+  }
+
   @override
   Widget build(BuildContext context) {
     context.watch<FFAppState>();
+    final double screenWidth = MediaQuery.of(context).size.width;
+    // Responsive breakpoints
+    double titleFontSize = screenWidth < 400
+        ? 14.0
+        : screenWidth < 800
+        ? 16.0
+        : 18.0;
+    double subtitleFontSize = screenWidth < 400
+        ? 11.0
+        : screenWidth < 800
+        ? 13.0
+        : 15.0;
+    double imageSize = screenWidth < 400
+        ? 64.0
+        : screenWidth < 800
+        ? 88.0
+        : 104.0;
+    double videoImageWidth = screenWidth < 400
+        ? 100.0
+        : screenWidth < 800
+        ? 120.0
+        : 144.0;
+    double videoImageHeight = screenWidth < 400
+        ? 56.0
+        : screenWidth < 800
+        ? 68.0
+        : 82.0;
+    double galleryImageLarge = screenWidth < 400
+        ? 110.0
+        : screenWidth < 800
+        ? 140.0
+        : 170.0;
+    double galleryImageSmall = screenWidth < 400
+        ? 55.0
+        : screenWidth < 800
+        ? 70.0
+        : 85.0;
+    double iconSize = screenWidth < 400
+        ? 14.0
+        : screenWidth < 800
+        ? 16.0
+        : 18.0;
+    double playFontSize = screenWidth < 400
+        ? 11.0
+        : screenWidth < 800
+        ? 12.0
+        : 13.0;
+    double rowPadding = screenWidth < 400
+        ? 8.0
+        : screenWidth < 800
+        ? 12.0
+        : 16.0;
+    double dividerThickness = screenWidth < 400 ? 0.5 : 1.0;
 
     return GestureDetector(
       onTap: () {
@@ -618,78 +685,117 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                         highlightColor:
                                                         Colors.transparent,
                                                         onTap: () async {
-                                                          logFirebaseEvent(
-                                                              'SEARCH_PAGE_PAGE_Row_he59rra1_ON_TAP');
-                                                          logFirebaseEvent(
-                                                              'Row_update_app_state');
-                                                          FFAppState()
-                                                              .audioUrl =
-                                                              getJsonField(
-                                                                postItem,
-                                                                r'''$.data''',
-                                                              ).toString();
-                                                          FFAppState()
-                                                              .currentAudioTrack =
-                                                              postItem;
-                                                          FFAppState()
-                                                              .AudioPlayerSongIndex =
-                                                              postIndex;
-                                                          FFAppState().AudioPlayerList =
-                                                              functions
-                                                                  .jsontoListJson(
-                                                                  postItem)
-                                                                  .toList()
-                                                                  .cast<
-                                                                  dynamic>();
-                                                          safeSetState(() {});
-                                                          logFirebaseEvent(
-                                                              'Row_navigate_to');
-                                                          playerPlayProcessDebounce(
-                                                            _model
+                                                          final pageManager =
+                                                              getIt<
+                                                                  PageManager>();
+                                                          final audioList = _model
                                                                 .audiPagingController!
-                                                                .itemList!
-                                                                .map((sObj) => {
-                                                              'id': sObj[
-                                                              "id"]
-                                                                  .toString(),
-                                                              'title': sObj[
-                                                              "title"]
-                                                                  .toString(),
+                                                              .itemList!;
+                                                          // Immediately show loading spinner in MainPlayer and MiniPlayer
+                                                          pageManager
+                                                              .setLoadingNewAudio(
+                                                                  true);
+                                                          pageManager
+                                                                  .playButtonNotifier
+                                                                  .value =
+                                                              ButtonState
+                                                                  .loading;
+                                                          pageManager
+                                                              .currentSongNotifier
+                                                              .value = null;
+                                                          // Immediately stop any currently playing audio
+                                                          await pageManager
+                                                              .audioHandler
+                                                              .stop();
+                                                          // Fetch all URLs in parallel (but don't await)
+                                                          Future(() async {
+                                                            final urls = await Future.wait(
+                                                                audioList.map((item) =>
+                                                                    getPlayableUrl(
+                                                                        getJsonField(
+                                                                            item,
+                                                                            r'$.data'))));
+                                                            final playlist =
+                                                                <MediaItem>[];
+                                                            for (int i = 0;
+                                                                i <
+                                                                    audioList
+                                                                        .length;
+                                                                i++) {
+                                                              final item =
+                                                                  audioList[i];
+                                                              final url =
+                                                                  urls[i];
+                                                              final itemMap = {
+                                                                'id':
+                                                                    getJsonField(
+                                                                        item,
+                                                                        r'$.id'),
+                                                                'album':
+                                                                    getJsonField(
+                                                                        item,
+                                                                        r'$.album'),
                                                               'artist':
-                                                              sObj["author"]
-                                                                  .toString(),
-                                                              'album': sObj[
-                                                              "album"]
-                                                                  .toString(),
-                                                              'genre': sObj[
-                                                              "language"]
-                                                                  .toString(),
-                                                              'image': sObj[
-                                                              "image"]
-                                                                  .toString(),
-                                                              'url': sObj[
-                                                              "data"]
-                                                                  .toString(),
+                                                                    getJsonField(
+                                                                        item,
+                                                                        r'$.author'),
+                                                                'duration':
+                                                                    getJsonField(
+                                                                            item,
+                                                                            r'$.duration') ??
+                                                                        180,
+                                                                'title':
+                                                                    getJsonField(
+                                                                        item,
+                                                                        r'$.title'),
+                                                                'image':
+                                                                    getJsonField(
+                                                                        item,
+                                                                        r'$.image'),
+                                                                'language':
+                                                                    getJsonField(
+                                                                        item,
+                                                                        r'$.language'),
+                                                                'url': url,
                                                               'user_id':
-                                                              sObj["artistsId"]
-                                                                  .toString(),
+                                                                    getJsonField(
+                                                                        item,
+                                                                        r'$.artistsId'),
                                                               'user_name':
-                                                              sObj["artists"]
-                                                                  .toString(),
+                                                                    getJsonField(
+                                                                        item,
+                                                                        r'$.artists'),
+                                                                'album_id':
+                                                                    getJsonField(
+                                                                        item,
+                                                                        r'$.album_id'),
                                                               'extra': {
-                                                                'json':
-                                                                sObj,
-                                                                'date':
-                                                                sObj["date"].toString(),
+                                                                  'json': item,
+                                                                  'date': getJsonField(
+                                                                      item,
+                                                                      r'$.date'),
                                                                 'country':
-                                                                sObj["country"].toString(),
-                                                                'city':
-                                                                sObj["city"].toString(),
-                                                              },
-                                                            })
-                                                                .toList(),
-                                                            postIndex,
-                                                          );
+                                                                      getJsonField(
+                                                                          item,
+                                                                          r'$.country'),
+                                                                  'city': getJsonField(
+                                                                      item,
+                                                                      r'$.city'),
+                                                                },
+                                                              };
+                                                              playlist.add(
+                                                                  await MediaItemConverter
+                                                                      .mapToMediaItem(
+                                                                          itemMap));
+                                                            }
+                                                            await (pageManager
+                                                                        .audioHandler
+                                                                    as MyAudioHandler)
+                                                                .setNewPlaylist(
+                                                                    playlist,
+                                                                    postIndex);
+                                                          });
+                                                          // Immediately open MainPlayerView
                                                           Navigator.push(
                                                             context,
                                                             PageRouteBuilder(
@@ -700,30 +806,6 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                               const MainPlayerView(),
                                                             ),
                                                           );
-                                                          // context.pushNamed(
-                                                          //   NowPlayingPageWidget
-                                                          //       .routeName,
-                                                          //   queryParameters: {
-                                                          //     'currentAudio':
-                                                          //         serializeParam(
-                                                          //       postItem,
-                                                          //       ParamType.JSON,
-                                                          //     ),
-                                                          //     'chapters':
-                                                          //         serializeParam(
-                                                          //       functions
-                                                          //           .jsontoListJson(
-                                                          //               postItem),
-                                                          //       ParamType.JSON,
-                                                          //       isList: true,
-                                                          //     ),
-                                                          //     'currentAudioIndex':
-                                                          //         serializeParam(
-                                                          //       postIndex,
-                                                          //       ParamType.int,
-                                                          //     ),
-                                                          //   }.withoutNulls,
-                                                          // );
                                                         },
                                                         child: Row(
                                                           mainAxisSize:
@@ -782,14 +864,15 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                                   fit: BoxFit
                                                                       .cover,
                                                                   alignment:
-                                                                  Alignment(
+                                                                      const Alignment(
                                                                       -1.0,
                                                                       0.0),
                                                                 ),
                                                               ),
                                                             Flexible(
                                                               child: Padding(
-                                                                padding: EdgeInsetsDirectional
+                                                                padding:
+                                                                    const EdgeInsetsDirectional
                                                                     .fromSTEB(
                                                                     16.0,
                                                                     0.0,
@@ -806,13 +889,25 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                                   CrossAxisAlignment
                                                                       .start,
                                                                   children: [
+                                                                    SingleChildScrollView(
+                                                                      scrollDirection:
+                                                                          Axis.horizontal,
+                                                                      child:
                                                                     Row(
                                                                       mainAxisSize:
-                                                                      MainAxisSize
-                                                                          .min,
+                                                                            MainAxisSize.max,
+                                                                        mainAxisAlignment:
+                                                                            MainAxisAlignment.spaceBetween,
+                                                                        crossAxisAlignment:
+                                                                            CrossAxisAlignment.start,
                                                                       children: [
-                                                                        Flexible(
+                                                                          SingleChildScrollView(
+                                                                            scrollDirection:
+                                                                                Axis.horizontal,
                                                                           child:
+                                                                                Row(
+                                                                              mainAxisSize: MainAxisSize.max,
+                                                                              children: [
                                                                           Text(
                                                                             getJsonField(
                                                                               postItem,
@@ -824,20 +919,24 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                                                 fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
                                                                               ),
                                                                               color: Color(0xFF232323),
-                                                                              fontSize: 16.0,
+                                                                                        fontSize: 16,
                                                                               letterSpacing: 0.0,
                                                                               fontWeight: FontWeight.w500,
                                                                               fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
                                                                             ),
+                                                                                ),
+                                                                              ],
                                                                           ),
                                                                         ),
                                                                       ],
                                                                     ),
+                                                                    ),
+                                                                    // Generated code for this Wrap Widget...
                                                                     Wrap(
                                                                       spacing:
-                                                                      0.0,
+                                                                          0,
                                                                       runSpacing:
-                                                                      0.0,
+                                                                          0,
                                                                       alignment:
                                                                       WrapAlignment
                                                                           .start,
@@ -879,7 +978,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                                                 fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
                                                                               ),
                                                                               color: FlutterFlowTheme.of(context).backGrey,
-                                                                              fontSize: 13.0,
+                                                                                  fontSize: 13,
                                                                               letterSpacing: 0.0,
                                                                               fontWeight: FontWeight.w500,
                                                                               fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
@@ -898,10 +997,10 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                                                 null))
                                                                           SizedBox(
                                                                             height:
-                                                                            16.0,
+                                                                                16,
                                                                             child:
                                                                             VerticalDivider(
-                                                                              thickness: 1.0,
+                                                                              thickness: 1,
                                                                               color: Color(0xFF7ECBC9),
                                                                             ),
                                                                           ),
@@ -921,7 +1020,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                                                 fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
                                                                               ),
                                                                               color: FlutterFlowTheme.of(context).backGrey,
-                                                                              fontSize: 13.0,
+                                                                                  fontSize: 13,
                                                                               letterSpacing: 0.0,
                                                                               fontWeight: FontWeight.w500,
                                                                               fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
@@ -940,10 +1039,10 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                                                 null))
                                                                           SizedBox(
                                                                             height:
-                                                                            16.0,
+                                                                                16,
                                                                             child:
                                                                             VerticalDivider(
-                                                                              thickness: 1.0,
+                                                                              thickness: 1,
                                                                               color: Color(0xFF7ECBC9),
                                                                             ),
                                                                           ),
@@ -970,7 +1069,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                                                 fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
                                                                               ),
                                                                               color: FlutterFlowTheme.of(context).backGrey,
-                                                                              fontSize: 13.0,
+                                                                                  fontSize: 13,
                                                                               letterSpacing: 0.0,
                                                                               fontWeight: FontWeight.w500,
                                                                               fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
@@ -980,7 +1079,8 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                                       ],
                                                                     ),
                                                                     Padding(
-                                                                      padding: EdgeInsetsDirectional.fromSTEB(
+                                                                      padding: const EdgeInsetsDirectional
+                                                                          .fromSTEB(
                                                                           0.0,
                                                                           8.0,
                                                                           0.0,
@@ -1014,7 +1114,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                                                   ),
                                                                                   Text(
                                                                                     FFLocalizations.of(context).getText(
-                                                                                      'rnm396nn' /* Play */,
+                                                                                      'bqcznszn' /* Play */,
                                                                                     ),
                                                                                     style: FlutterFlowTheme.of(context).bodyMedium.override(
                                                                                       font: GoogleFonts.poppins(
@@ -1039,18 +1139,76 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                                             MainAxisAlignment.end,
                                                                             children:
                                                                             [
-                                                                              LikeUnlikeWidget(
-                                                                                key: Key('Keyydt_${postIndex}_of_${_model.audiPagingController!.itemList!.length}'),
-                                                                                post: postItem,
-                                                                              ),
+                                                                              if (functions.isFavourite(
+                                                                                  getJsonField(
+                                                                                    postItem,
+                                                                                    r'''$.id''',
+                                                                                  ),
+                                                                                  FFAppState().FavouriteList.toList()))
                                                                               InkWell(
                                                                                 splashColor: Colors.transparent,
                                                                                 focusColor: Colors.transparent,
                                                                                 hoverColor: Colors.transparent,
                                                                                 highlightColor: Colors.transparent,
                                                                                 onTap: () async {
-                                                                                  logFirebaseEvent('SEARCH_Container_oacpmhot_ON_TAP');
-                                                                                  logFirebaseEvent('Container_bottom_sheet');
+                                                                                    await action_blocks.likeUnlikePost(
+                                                                                      context,
+                                                                                      postItem: postItem,
+                                                                                    );
+                                                                                  },
+                                                                                  child: Container(
+                                                                                    width: 28.0,
+                                                                                    height: 28.0,
+                                                                                    decoration: BoxDecoration(
+                                                                                      color: FlutterFlowTheme.of(context).secondaryBackground,
+                                                                                      shape: BoxShape.circle,
+                                                                                    ),
+                                                                                    alignment: AlignmentDirectional(0.0, 0.0),
+                                                                                    child: Icon(
+                                                                                      Icons.favorite,
+                                                                                      color: FlutterFlowTheme.of(context).primaryText,
+                                                                                      size: 18.0,
+                                                                                    ),
+                                                                                  ),
+                                                                                ),
+                                                                              if (!functions.isFavourite(
+                                                                                  getJsonField(
+                                                                                    postItem,
+                                                                                    r'''$.id''',
+                                                                                  ),
+                                                                                  FFAppState().FavouriteList.toList()))
+                                                                                InkWell(
+                                                                                  splashColor: Colors.transparent,
+                                                                                  focusColor: Colors.transparent,
+                                                                                  hoverColor: Colors.transparent,
+                                                                                  highlightColor: Colors.transparent,
+                                                                                  onTap: () async {
+                                                                                    await action_blocks.likeUnlikePost(
+                                                                                      context,
+                                                                                      postItem: postItem,
+                                                                                    );
+                                                                                  },
+                                                                                  child: Container(
+                                                                                    width: 28.0,
+                                                                                    height: 28.0,
+                                                                                    decoration: BoxDecoration(
+                                                                                      color: FlutterFlowTheme.of(context).secondaryBackground,
+                                                                                      shape: BoxShape.circle,
+                                                                                    ),
+                                                                                    alignment: AlignmentDirectional(0.0, 0.0),
+                                                                                    child: Icon(
+                                                                                      Icons.favorite_border,
+                                                                                      color: FlutterFlowTheme.of(context).primaryText,
+                                                                                      size: 18.0,
+                                                                                    ),
+                                                                                  ),
+                                                                                ),
+                                                                              InkWell(
+                                                                                splashColor: Colors.transparent,
+                                                                                focusColor: Colors.transparent,
+                                                                                hoverColor: Colors.transparent,
+                                                                                highlightColor: Colors.transparent,
+                                                                                onTap: () async {
                                                                                   await showModalBottomSheet(
                                                                                     isScrollControlled: true,
                                                                                     backgroundColor: Colors.transparent,
@@ -1059,10 +1217,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                                                     builder: (context) {
                                                                                       return WebViewAware(
                                                                                         child: GestureDetector(
-                                                                                          onTap: () {
-                                                                                            FocusScope.of(context).unfocus();
-                                                                                            FocusManager.instance.primaryFocus?.unfocus();
-                                                                                          },
+                                                                                          onTap: () => FocusScope.of(context).unfocus(),
                                                                                           child: Padding(
                                                                                             padding: MediaQuery.viewInsetsOf(context),
                                                                                             child: NotesWidget(
@@ -1095,8 +1250,6 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                                                 hoverColor: Colors.transparent,
                                                                                 highlightColor: Colors.transparent,
                                                                                 onTap: () async {
-                                                                                  logFirebaseEvent('SEARCH_Container_sxgsbyzs_ON_TAP');
-                                                                                  logFirebaseEvent('Container_bottom_sheet');
                                                                                   await showModalBottomSheet(
                                                                                     isScrollControlled: true,
                                                                                     backgroundColor: Colors.transparent,
@@ -1105,10 +1258,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                                                     builder: (context) {
                                                                                       return WebViewAware(
                                                                                         child: GestureDetector(
-                                                                                          onTap: () {
-                                                                                            FocusScope.of(context).unfocus();
-                                                                                            FocusManager.instance.primaryFocus?.unfocus();
-                                                                                          },
+                                                                                          onTap: () => FocusScope.of(context).unfocus(),
                                                                                           child: Padding(
                                                                                             padding: MediaQuery.viewInsetsOf(context),
                                                                                             child: SavetoPlaylistWidget(
@@ -1142,8 +1292,6 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                                                   hoverColor: Colors.transparent,
                                                                                   highlightColor: Colors.transparent,
                                                                                   onTap: () async {
-                                                                                    logFirebaseEvent('SEARCH_Container_fh8fjvfe_ON_TAP');
-                                                                                    logFirebaseEvent('Container_action_block');
                                                                                     await action_blocks.allShare(
                                                                                       context,
                                                                                       url: getJsonField(
@@ -1182,12 +1330,12 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                                                     size: 18.0,
                                                                                   ),
                                                                                 ),
-                                                                            ].divide(SizedBox(width: 4.0)),
+                                                                            ].divide(const SizedBox(width: 4.0)),
                                                                           ),
                                                                         ],
                                                                       ),
                                                                     ),
-                                                                  ].divide(SizedBox(
+                                                                  ].divide(const SizedBox(
                                                                       height:
                                                                       8.0)),
                                                                 ),
@@ -1318,113 +1466,56 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                         highlightColor:
                                                         Colors.transparent,
                                                         onTap: () async {
-                                                          logFirebaseEvent(
-                                                              'SEARCH_PAGE_PAGE_Row_ji52agqf_ON_TAP');
-                                                          logFirebaseEvent(
-                                                              'Row_update_app_state');
-                                                          FFAppState()
-                                                              .audioUrl =
-                                                              getJsonField(
-                                                                postItem,
-                                                                r'''$.data''',
-                                                              ).toString();
-                                                          FFAppState()
-                                                              .currentAudioTrack =
-                                                              postItem;
-                                                          FFAppState()
-                                                              .AudioPlayerSongIndex =
-                                                              postIndex;
-                                                          FFAppState().AudioPlayerList =
-                                                              functions
-                                                                  .jsontoListJson(
-                                                                  postItem)
-                                                                  .toList()
-                                                                  .cast<
-                                                                  dynamic>();
-                                                          safeSetState(() {});
-                                                          logFirebaseEvent(
-                                                              'Row_navigate_to');
-
-                                                          playerPlayProcessDebounce(
-                                                            _model
-                                                                .audiPagingController!
-                                                                .itemList!
-                                                                .map((sObj) => {
-                                                              'id': sObj[
-                                                              "id"]
-                                                                  .toString(),
-                                                              'title': sObj[
-                                                              "title"]
-                                                                  .toString(),
-                                                              'artist':
-                                                              sObj["author"]
-                                                                  .toString(),
-                                                              'album': sObj[
-                                                              "album"]
-                                                                  .toString(),
-                                                              'genre': sObj[
-                                                              "language"]
-                                                                  .toString(),
-                                                              'image': sObj[
-                                                              "image"]
-                                                                  .toString(),
-                                                              'url': sObj[
-                                                              "data"]
-                                                                  .toString(),
-                                                              'user_id':
-                                                              sObj["artistsId"]
-                                                                  .toString(),
-                                                              'user_name':
-                                                              sObj["artists"]
-                                                                  .toString(),
+                                                          final pageManager = getIt<PageManager>();
+                                                          final audioList = _model.prabhupadPagingController!.itemList!;
+                                                          // Immediately show loading spinner in MainPlayer and MiniPlayer
+                                                          pageManager.setLoadingNewAudio(true);
+                                                          pageManager.playButtonNotifier.value = ButtonState.loading;
+                                                          pageManager.currentSongNotifier.value = null;
+                                                          // Immediately stop any currently playing audio
+                                                          await pageManager.audioHandler.stop();
+                                                          // Fetch all URLs in parallel (but don't await)
+                                                          Future(() async {
+                                                            final urls = await Future.wait(
+                                                                audioList.map((item) =>
+                                                                    getPlayableUrl(getJsonField(item, r'$.data'))));
+                                                            final playlist = <MediaItem>[];
+                                                            for (int i = 0; i < audioList.length; i++) {
+                                                              final item = audioList[i];
+                                                              final url = urls[i];
+                                                              final itemMap = {
+                                                                'id': getJsonField(item, r'$.id'),
+                                                                'album': getJsonField(item, r'$.album'),
+                                                                'artist': getJsonField(item, r'$.author'),
+                                                                'duration': getJsonField(item, r'$.duration') ?? 180,
+                                                                'title': getJsonField(item, r'$.title'),
+                                                                'image': getJsonField(item, r'$.image'),
+                                                                'language': getJsonField(item, r'$.language'),
+                                                                'url': url,
+                                                                'user_id': getJsonField(item, r'$.artistsId'),
+                                                                'user_name': getJsonField(item, r'$.artists'),
+                                                                'album_id': getJsonField(item, r'$.album_id'),
                                                               'extra': {
-                                                                'json':
-                                                                sObj,
-                                                                'date':
-                                                                sObj["date"].toString(),
-                                                                'country':
-                                                                sObj["country"].toString(),
-                                                                'city':
-                                                                sObj["city"].toString(),
-                                                              },
-                                                            })
-                                                                .toList(),
-                                                            postIndex,
-                                                          );
+                                                                  'json': item,
+                                                                  'date': getJsonField(item, r'$.date'),
+                                                                  'country': getJsonField(item, r'$.country'),
+                                                                  'city': getJsonField(item, r'$.city'),
+                                                                },
+                                                              };
+                                                              playlist.add(
+                                                                  await MediaItemConverter.mapToMediaItem(itemMap));
+                                                            }
+                                                            await (pageManager.audioHandler as MyAudioHandler)
+                                                                .setNewPlaylist(playlist, postIndex);
+                                                          });
+                                                          // Immediately open MainPlayerView
                                                           Navigator.push(
                                                             context,
                                                             PageRouteBuilder(
                                                               opaque: false,
-                                                              pageBuilder: (_,
-                                                                  ___,
-                                                                  __) =>
-                                                              const MainPlayerView(),
+                                                              pageBuilder: (_, ___, __) => const MainPlayerView(),
                                                             ),
                                                           );
-                                                          // context.pushNamed(
-                                                          //   NowPlayingPageWidget
-                                                          //       .routeName,
-                                                          //   queryParameters: {
-                                                          //     'currentAudio':
-                                                          //         serializeParam(
-                                                          //       postItem,
-                                                          //       ParamType.JSON,
-                                                          //     ),
-                                                          //     'chapters':
-                                                          //         serializeParam(
-                                                          //       functions
-                                                          //           .jsontoListJson(
-                                                          //               postItem),
-                                                          //       ParamType.JSON,
-                                                          //       isList: true,
-                                                          //     ),
-                                                          //     'currentAudioIndex':
-                                                          //         serializeParam(
-                                                          //       postIndex,
-                                                          //       ParamType.int,
-                                                          //     ),
-                                                          //   }.withoutNulls,
-                                                          // );
                                                         },
                                                         child: Row(
                                                           mainAxisSize:
@@ -1483,7 +1574,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                                   fit: BoxFit
                                                                       .cover,
                                                                   alignment:
-                                                                  Alignment(
+                                                                      const Alignment(
                                                                       -1.0,
                                                                       0.0),
                                                                 ),
@@ -1903,11 +1994,12 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                       ),
                                       KeepAliveWidgetWrapper(
                                         builder: (context) => Padding(
-                                          padding:
-                                          EdgeInsetsDirectional.fromSTEB(
+                                          padding: EdgeInsetsDirectional
+                                              .fromSTEB(
                                               24.0, 0.0, 24.0, 0.0),
                                           child: RefreshIndicator(
-                                            color: FlutterFlowTheme.of(context)
+                                            color:
+                                            FlutterFlowTheme.of(context)
                                                 .primaryText,
                                             onRefresh: () async {
                                               logFirebaseEvent(
@@ -1923,15 +2015,17 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                             child: PagedListView<
                                                 ApiPagingParams,
                                                 dynamic>.separated(
-                                              pagingController:
-                                              _model.setVideosController(
-                                                    (nextPageMarker) => LaravelGroup
+                                              pagingController: _model
+                                                  .setVideosController(
+                                                    (nextPageMarker) =>
+                                                    LaravelGroup
                                                     .searchPostCall
                                                     .call(
                                                   token: FFAppState().Token,
-                                                  search:
-                                                  valueOrDefault<String>(
-                                                    _model.textController.text,
+                                                      search: valueOrDefault<
+                                                          String>(
+                                                        _model.textController
+                                                            .text,
                                                     'abcdefghijk',
                                                   ),
                                                   page: nextPageMarker
@@ -1944,7 +2038,8 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                               primary: false,
                                               shrinkWrap: true,
                                               reverse: false,
-                                              scrollDirection: Axis.vertical,
+                                              scrollDirection:
+                                              Axis.vertical,
                                               separatorBuilder: (_, __) =>
                                                   SizedBox(height: 12.0),
                                               builderDelegate:
@@ -1988,8 +2083,8 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                 ),
                                                 noItemsFoundIndicatorBuilder:
                                                     (_) => EmptyWidget(),
-                                                itemBuilder:
-                                                    (context, _, postIndex) {
+                                                itemBuilder: (context, _,
+                                                    postIndex) {
                                                   final postItem = _model
                                                       .videosPagingController!
                                                       .itemList![postIndex];
@@ -2001,14 +2096,15 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                         .center,
                                                     children: [
                                                       InkWell(
-                                                        splashColor:
-                                                        Colors.transparent,
-                                                        focusColor:
-                                                        Colors.transparent,
-                                                        hoverColor:
-                                                        Colors.transparent,
+                                                        splashColor: Colors
+                                                            .transparent,
+                                                        focusColor: Colors
+                                                            .transparent,
+                                                        hoverColor: Colors
+                                                            .transparent,
                                                         highlightColor:
-                                                        Colors.transparent,
+                                                        Colors
+                                                            .transparent,
                                                         onTap: () async {
                                                           logFirebaseEvent(
                                                               'SEARCH_PAGE_PAGE_Row_whyz6nmf_ON_TAP');
@@ -2018,18 +2114,21 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                           context.pushNamed(
                                                             VideoPostWidget
                                                                 .routeName,
-                                                            queryParameters: {
+                                                            queryParameters:
+                                                            {
                                                               'videoItem':
                                                               serializeParam(
                                                                 postItem,
-                                                                ParamType.JSON,
+                                                                ParamType
+                                                                    .JSON,
                                                               ),
                                                             }.withoutNulls,
                                                           );
                                                         },
                                                         child: Row(
                                                           mainAxisSize:
-                                                          MainAxisSize.max,
+                                                          MainAxisSize
+                                                              .max,
                                                           children: [
                                                             if (getJsonField(
                                                               postItem,
@@ -2038,8 +2137,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                                 null)
                                                               ClipRRect(
                                                                 borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
+                                                                BorderRadius.circular(
                                                                     8.0),
                                                                 child: Image
                                                                     .network(
@@ -2047,8 +2145,10 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                                     postItem,
                                                                     r'''$.image''',
                                                                   ).toString(),
-                                                                  width: 144.0,
-                                                                  height: 82.0,
+                                                                  width:
+                                                                  videoImageWidth,
+                                                                  height:
+                                                                  videoImageHeight,
                                                                   fit: BoxFit
                                                                       .cover,
                                                                   errorBuilder: (context,
@@ -2058,9 +2158,9 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                                           .asset(
                                                                         'assets/images/error_image.png',
                                                                         width:
-                                                                        144.0,
+                                                                        videoImageWidth,
                                                                         height:
-                                                                        82.0,
+                                                                        videoImageHeight,
                                                                         fit: BoxFit
                                                                             .cover,
                                                                       ),
@@ -2073,14 +2173,15 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                                 null)
                                                               ClipRRect(
                                                                 borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
+                                                                BorderRadius.circular(
                                                                     8.0),
-                                                                child:
-                                                                Image.asset(
+                                                                child: Image
+                                                                    .asset(
                                                                   'assets/images/AboutImage.png',
-                                                                  width: 144.0,
-                                                                  height: 82.0,
+                                                                  width:
+                                                                  videoImageWidth,
+                                                                  height:
+                                                                  videoImageHeight,
                                                                   fit: BoxFit
                                                                       .cover,
                                                                   alignment:
@@ -2090,14 +2191,16 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                                 ),
                                                               ),
                                                             Flexible(
-                                                              child: Padding(
+                                                              child:
+                                                              Padding(
                                                                 padding: EdgeInsetsDirectional
                                                                     .fromSTEB(
-                                                                    16.0,
+                                                                    rowPadding,
                                                                     0.0,
-                                                                    16.0,
+                                                                    rowPadding,
                                                                     0.0),
-                                                                child: Column(
+                                                                child:
+                                                                Column(
                                                                   mainAxisSize:
                                                                   MainAxisSize
                                                                       .max,
@@ -2107,7 +2210,8 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                                   crossAxisAlignment:
                                                                   CrossAxisAlignment
                                                                       .start,
-                                                                  children: [
+                                                                  children:
+                                                                  [
                                                                     SingleChildScrollView(
                                                                       scrollDirection:
                                                                       Axis.horizontal,
@@ -2121,13 +2225,8 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                                         CrossAxisAlignment.start,
                                                                         children: [
                                                                           Padding(
-                                                                            padding: EdgeInsetsDirectional.fromSTEB(
-                                                                                0.0,
-                                                                                0.0,
-                                                                                12.0,
-                                                                                0.0),
-                                                                            child:
-                                                                            Text(
+                                                                            padding: EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 12.0, 0.0),
+                                                                            child: Text(
                                                                               getJsonField(
                                                                                 postItem,
                                                                                 r'''$.title''',
@@ -2138,7 +2237,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                                                   fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
                                                                                 ),
                                                                                 color: Color(0xFF232323),
-                                                                                fontSize: 16.0,
+                                                                                fontSize: titleFontSize,
                                                                                 letterSpacing: 0.0,
                                                                                 fontWeight: FontWeight.w500,
                                                                                 fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
@@ -2162,16 +2261,13 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                                         MainAxisAlignment.spaceBetween,
                                                                         children: [
                                                                           Container(
-                                                                            decoration:
-                                                                            BoxDecoration(
+                                                                            decoration: BoxDecoration(
                                                                               color: FlutterFlowTheme.of(context).primaryText,
                                                                               borderRadius: BorderRadius.circular(20.0),
                                                                               shape: BoxShape.rectangle,
                                                                             ),
-                                                                            alignment:
-                                                                            AlignmentDirectional(0.0, 0.0),
-                                                                            child:
-                                                                            Padding(
+                                                                            alignment: AlignmentDirectional(0.0, 0.0),
+                                                                            child: Padding(
                                                                               padding: EdgeInsetsDirectional.fromSTEB(6.0, 3.0, 12.0, 3.0),
                                                                               child: Row(
                                                                                 mainAxisSize: MainAxisSize.max,
@@ -2179,7 +2275,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                                                   Icon(
                                                                                     Icons.play_arrow,
                                                                                     color: FlutterFlowTheme.of(context).secondaryBackground,
-                                                                                    size: 18.0,
+                                                                                    size: iconSize,
                                                                                   ),
                                                                                   Text(
                                                                                     FFLocalizations.of(context).getText(
@@ -2191,7 +2287,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                                                         fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
                                                                                       ),
                                                                                       color: FlutterFlowTheme.of(context).secondaryBackground,
-                                                                                      fontSize: 13.0,
+                                                                                      fontSize: playFontSize,
                                                                                       letterSpacing: 0.0,
                                                                                       fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
                                                                                       fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
@@ -2202,12 +2298,9 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                                             ),
                                                                           ),
                                                                           Row(
-                                                                            mainAxisSize:
-                                                                            MainAxisSize.max,
-                                                                            mainAxisAlignment:
-                                                                            MainAxisAlignment.end,
-                                                                            children:
-                                                                            [
+                                                                            mainAxisSize: MainAxisSize.max,
+                                                                            mainAxisAlignment: MainAxisAlignment.end,
+                                                                            children: [
                                                                               LikeUnlikeWidget(
                                                                                 key: Key('Keyuoh_${postIndex}_of_${_model.videosPagingController!.itemList!.length}'),
                                                                                 post: postItem,
@@ -2254,7 +2347,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                                                   child: Icon(
                                                                                     Icons.edit_note_outlined,
                                                                                     color: FlutterFlowTheme.of(context).primaryText,
-                                                                                    size: 18.0,
+                                                                                    size: iconSize,
                                                                                   ),
                                                                                 ),
                                                                               ),
@@ -2300,7 +2393,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                                                   child: Icon(
                                                                                     Icons.playlist_add,
                                                                                     color: FlutterFlowTheme.of(context).primaryText,
-                                                                                    size: 18.0,
+                                                                                    size: iconSize,
                                                                                   ),
                                                                                 ),
                                                                               ),
@@ -2332,7 +2425,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                                                     child: FaIcon(
                                                                                       FontAwesomeIcons.share,
                                                                                       color: FlutterFlowTheme.of(context).primaryText,
-                                                                                      size: 18.0,
+                                                                                      size: iconSize,
                                                                                     ),
                                                                                   ),
                                                                                 ),
@@ -2348,7 +2441,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                                                   child: Icon(
                                                                                     Icons.file_download_outlined,
                                                                                     color: FlutterFlowTheme.of(context).primaryText,
-                                                                                    size: 18.0,
+                                                                                    size: iconSize,
                                                                                   ),
                                                                                 ),
                                                                             ].divide(SizedBox(width: 4.0)),
@@ -2357,8 +2450,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                                       ),
                                                                     ),
                                                                   ].divide(SizedBox(
-                                                                      height:
-                                                                      8.0)),
+                                                                      height: 8.0)),
                                                                 ),
                                                               ),
                                                             ),
@@ -2366,12 +2458,12 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                         ),
                                                       ),
                                                       Divider(
-                                                        thickness: 1.0,
-                                                        color:
-                                                        Color(0xFFD9D9D9),
+                                                        thickness: dividerThickness,
+                                                        color: Color(
+                                                            0xFFD9D9D9),
                                                       ),
-                                                    ].divide(
-                                                        SizedBox(height: 8.0)),
+                                                    ].divide(SizedBox(
+                                                        height: 8.0)),
                                                   );
                                                 },
                                               ),
@@ -2658,7 +2750,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                                                             ))
                                                                                             .toList()
                                                                                             .elementAtOrNull(0),
-                                                                                        r'''$.data''',
+                                                                                        r'''$.image''',
                                                                                       ).toString(),
                                                                                       width: 170.0,
                                                                                       height: 170.0,
@@ -2671,7 +2763,7 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                                                       children: [
                                                                                         ClipRRect(
                                                                                           borderRadius: BorderRadius.only(
-                                                                                            bottomLeft: Radius.circular(0.0),
+                                                                                             bottomLeft: Radius.circular(0.0),
                                                                                             bottomRight: Radius.circular(0.0),
                                                                                             topLeft: Radius.circular(0.0),
                                                                                             topRight: Radius.circular(8.0),
@@ -2679,26 +2771,35 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                                                           child: Image.network(
                                                                                             getJsonField(
                                                                                               LaravelGroup.searchPostCall
-                                                                                                  .dataList(
-                                                                                                photosSearchPostResponse.jsonBody,
-                                                                                              )!
+                                                                                                    .dataList(photosSearchPostResponse.jsonBody)!
                                                                                                   .where((e) =>
-                                                                                              getJsonField(
-                                                                                                e,
-                                                                                                r'''$.category_id''',
-                                                                                              ) ==
-                                                                                                  getJsonField(
-                                                                                                    postItem,
-                                                                                                    r'''$.category_id''',
-                                                                                                  ))
+                                                                                                getJsonField(e, r'''$.category_id''') ==
+                                                                                                    getJsonField(postItem, r'''$.category_id'''))
                                                                                                   .toList()
-                                                                                                  .elementAtOrNull(1),
-                                                                                              r'''$.data''',
+                                                                                                    .elementAtOrNull(2),
+                                                                                                r'''$.image''',
                                                                                             ).toString(),
                                                                                             width: 170.0,
                                                                                             height: 85.0,
                                                                                             fit: BoxFit.cover,
-                                                                                          ),
+
+                                                                                              // Placeholder while loading
+                                                                                              loadingBuilder: (context, child, loadingProgress) {
+                                                                                                if (loadingProgress == null) return child;
+                                                                                                return Center(child: CircularProgressIndicator());
+                                                                                              },
+
+                                                                                              // Fallback icon on error
+                                                                                              errorBuilder: (context, error, stackTrace) {
+                                                                                                return Container(
+                                                                                                  width: 170.0,
+                                                                                                  height: 85.0,
+                                                                                                  color: Colors.grey[200],
+                                                                                                  child: Icon(Icons.broken_image, size: 40, color: Colors.grey),
+                                                                                                );
+                                                                                              },
+                                                                                            )
+
                                                                                         ),
                                                                                         ClipRRect(
                                                                                           borderRadius: BorderRadius.only(
@@ -2710,26 +2811,35 @@ class _SearchPageWidgetState extends State<SearchPageWidget>
                                                                                           child: Image.network(
                                                                                             getJsonField(
                                                                                               LaravelGroup.searchPostCall
-                                                                                                  .dataList(
-                                                                                                photosSearchPostResponse.jsonBody,
-                                                                                              )!
+                                                                                                    .dataList(photosSearchPostResponse.jsonBody)!
                                                                                                   .where((e) =>
-                                                                                              getJsonField(
-                                                                                                e,
-                                                                                                r'''$.category_id''',
-                                                                                              ) ==
-                                                                                                  getJsonField(
-                                                                                                    postItem,
-                                                                                                    r'''$.category_id''',
-                                                                                                  ))
+                                                                                                getJsonField(e, r'''$.category_id''') ==
+                                                                                                    getJsonField(postItem, r'''$.category_id'''))
                                                                                                   .toList()
                                                                                                   .elementAtOrNull(2),
-                                                                                              r'''$.data''',
+                                                                                                r'''$.image''',
                                                                                             ).toString(),
                                                                                             width: 170.0,
                                                                                             height: 85.0,
                                                                                             fit: BoxFit.cover,
-                                                                                          ),
+
+                                                                                              // Placeholder while loading
+                                                                                              loadingBuilder: (context, child, loadingProgress) {
+                                                                                                if (loadingProgress == null) return child;
+                                                                                                return Center(child: CircularProgressIndicator());
+                                                                                              },
+
+                                                                                              // Fallback icon on error
+                                                                                              errorBuilder: (context, error, stackTrace) {
+                                                                                                return Container(
+                                                                                                  width: 170.0,
+                                                                                                  height: 85.0,
+                                                                                                  color: Colors.grey[200],
+                                                                                                  child: Icon(Icons.broken_image, size: 40, color: Colors.grey),
+                                                                                                );
+                                                                                              },
+                                                                                            )
+
                                                                                         ),
                                                                                       ].divide(SizedBox(height: 1.0)).around(SizedBox(height: 1.0)),
                                                                                     ),

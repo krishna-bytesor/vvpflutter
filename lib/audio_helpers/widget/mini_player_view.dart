@@ -79,14 +79,17 @@ class _MiniPlayerViewState extends State<MiniPlayerView> {
                                 ListTile(
                                   dense: false,
                                   onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      PageRouteBuilder(
-                                        opaque: false,
-                                        pageBuilder: (_, ___, __) =>
-                                            const MainPlayerView(),
-                                      ),
-                                    );
+                                    WidgetsBinding.instance
+                                        .addPostFrameCallback((_) {
+                                      Navigator.push(
+                                        context,
+                                        PageRouteBuilder(
+                                          opaque: false,
+                                          pageBuilder: (_, ___, __) =>
+                                              const MainPlayerView(),
+                                        ),
+                                      );
+                                    });
                                   },
                                   title: TextScroll(
                                     mediaItem.title,

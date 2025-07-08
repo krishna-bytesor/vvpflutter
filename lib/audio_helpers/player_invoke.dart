@@ -14,10 +14,11 @@ bool get isProcessForPlay {
 
 Timer? debounce;
 
-void playerPlayProcessDebounce(List songsList, int index) {
+void playerPlayProcessDebounce(List songsList, int index,
+    {bool autoplay = true}) {
   debounce?.cancel();
   debounce = Timer(const Duration(milliseconds: 600), () {
-    PlayerInvoke.init(songsList: songsList, index: index);
+    PlayerInvoke.init(songsList: songsList, index: index, autoplay: autoplay);
   });
 }
 
@@ -30,6 +31,7 @@ class PlayerInvoke {
     bool fromMiniPlayer = false,
     bool shuffle = false,
     String? playlistBox,
+    bool autoplay = true,
   }) async {
     final int globalIndex = index < 0 ? 0 : index;
     final List finalList = songsList.toList();
@@ -40,12 +42,12 @@ class PlayerInvoke {
         await pageManager.stop();
       }
 
-      await setValues(finalList, globalIndex);
+      await setValues(finalList, globalIndex, autoplay: autoplay);
     }
   }
 
   static Future<void> setValues(List arr, int index,
-      {recommend = false}) async {
+      {bool autoplay = true, recommend = false}) async {
     final List<MediaItem> queue = [];
     final Map playItem = arr[index] as Map;
     final Map? nextItem =
@@ -66,14 +68,17 @@ class PlayerInvoke {
           await MediaItemConverter.mapToMediaItem(song, autoplay: recommend));
     }
 
-    await updateNPlay(queue, index);
+    await updateNPlay(queue, index, autoplay: autoplay);
   }
 
-  static Future<void> updateNPlay(List<MediaItem> queue, int index) async {
+  static Future<void> updateNPlay(List<MediaItem> queue, int index,
+      {bool autoplay = true}) async {
     try {
       await pageManager.setShuffleMode(AudioServiceShuffleMode.none);
-      await pageManager.adds(queue, index);
-      await pageManager.playAS();
+      await pageManager.adds(queue, index, autoplay: autoplay);
+      if (autoplay) {
+        await pageManager.playAS();
+      }
     } catch (e) {
       if (kDebugMode) {
         print("error: $e");

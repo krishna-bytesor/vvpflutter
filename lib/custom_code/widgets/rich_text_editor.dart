@@ -55,7 +55,7 @@ class _RichTextEditorState extends State<RichTextEditor> {
       width: widget.width ?? double.infinity,
       height: widget.height ?? 300.0,
       child: HtmlEditor(
-         controller: controller,
+        controller: controller,
         htmlEditorOptions: HtmlEditorOptions(
           hint: "Type your Text here",
           initialText: widget.currentHtml?.isNotEmpty == true
@@ -85,6 +85,10 @@ class _RichTextEditorState extends State<RichTextEditor> {
             ),
           ],
         ),
+        otherOptions: OtherOptions(
+            // html_editor_enhanced does NOT support cursorColor directly.
+            // If you want a black cursor, you must use a different editor or request this feature from the package author.
+            ),
         callbacks: Callbacks(onChangeContent: (String? changed) {
           getContent();
           print('content changed to $changed');

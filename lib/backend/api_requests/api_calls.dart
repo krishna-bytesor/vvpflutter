@@ -774,7 +774,7 @@ class YoutubeUrlsCall {
 /// End VVP APIs Group Code
 
 /// Start Laravel Group Code
-///
+
 
 class LaravelGroup {
   static String getBaseUrl() => 'http://3.27.239.33/api/';

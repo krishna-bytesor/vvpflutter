@@ -20,6 +20,13 @@ import 'playlist_model.dart';
 export 'playlist_model.dart';
 
 import '../../audio_helpers/player_invoke.dart';
+import '../../audio_helpers/main_player/main_player.dart';
+import '../../audio_helpers/audio_handler.dart';
+import '../../audio_helpers/mediaitem_converter.dart';
+import '../../audio_helpers/page_manager.dart';
+import 'package:get_it/get_it.dart';
+import 'package:audio_service/audio_service.dart';
+import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
 class PlaylistWidget extends StatefulWidget {
   const PlaylistWidget({
@@ -41,6 +48,24 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
   late PlaylistModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
+
+  Future<String> getPlayableUrl(dynamic url) async {
+    final urlStr = url.toString();
+    if (urlStr.contains('youtube.com') || urlStr.contains('youtu.be')) {
+      final yt = YoutubeExplode();
+      try {
+        final videoId = VideoId(urlStr);
+        final manifest = await yt.videos.streamsClient.getManifest(videoId);
+        final audioStreamInfo = manifest.audioOnly.withHighestBitrate();
+        yt.close();
+        return audioStreamInfo.url.toString();
+      } catch (e) {
+        yt.close();
+        return urlStr;
+      }
+    }
+    return urlStr;
+  }
 
   @override
   void initState() {
@@ -94,7 +119,7 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
             );
           }
           final playlistPlaylistItemsResponse = snapshot.data!;
-      
+
           return GestureDetector(
             onTap: () {
               FocusScope.of(context).unfocus();
@@ -126,14 +151,15 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
                     children: [
                       Expanded(
                         child: Padding(
-                          padding:
-                          EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 0.0, 8.0),
+                          padding: EdgeInsetsDirectional.fromSTEB(
+                              0.0, 0.0, 0.0, 8.0),
                           child: Column(
                             mainAxisSize: MainAxisSize.max,
                             children: [
                               Row(
                                 mainAxisSize: MainAxisSize.max,
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   FlutterFlowIconButton(
                                     borderColor: Colors.transparent,
@@ -163,21 +189,21 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
                                       style: FlutterFlowTheme.of(context)
                                           .bodyMedium
                                           .override(
-                                        font: GoogleFonts.poppins(
-                                          fontWeight: FontWeight.w600,
-                                          fontStyle:
-                                          FlutterFlowTheme.of(context)
-                                              .bodyMedium
-                                              .fontStyle,
-                                        ),
-                                        fontSize: 20.0,
-                                        letterSpacing: 0.0,
-                                        fontWeight: FontWeight.w600,
-                                        fontStyle:
-                                        FlutterFlowTheme.of(context)
-                                            .bodyMedium
-                                            .fontStyle,
-                                      ),
+                                            font: GoogleFonts.poppins(
+                                              fontWeight: FontWeight.w600,
+                                              fontStyle:
+                                                  FlutterFlowTheme.of(context)
+                                                      .bodyMedium
+                                                      .fontStyle,
+                                            ),
+                                            fontSize: 20.0,
+                                            letterSpacing: 0.0,
+                                            fontWeight: FontWeight.w600,
+                                            fontStyle:
+                                                FlutterFlowTheme.of(context)
+                                                    .bodyMedium
+                                                    .fontStyle,
+                                          ),
                                     ),
                                   ),
                                   Container(
@@ -199,31 +225,31 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
                                         labelStyle: FlutterFlowTheme.of(context)
                                             .titleMedium
                                             .override(
-                                          font: GoogleFonts.poppins(
-                                            fontWeight:
-                                            FlutterFlowTheme.of(context)
-                                                .titleMedium
-                                                .fontWeight,
-                                            fontStyle:
-                                            FlutterFlowTheme.of(context)
-                                                .titleMedium
-                                                .fontStyle,
-                                          ),
-                                          fontSize: 14.0,
-                                          letterSpacing: 0.0,
-                                          fontWeight:
-                                          FlutterFlowTheme.of(context)
-                                              .titleMedium
-                                              .fontWeight,
-                                          fontStyle:
-                                          FlutterFlowTheme.of(context)
-                                              .titleMedium
-                                              .fontStyle,
-                                        ),
+                                              font: GoogleFonts.poppins(
+                                                fontWeight:
+                                                    FlutterFlowTheme.of(context)
+                                                        .titleMedium
+                                                        .fontWeight,
+                                                fontStyle:
+                                                    FlutterFlowTheme.of(context)
+                                                        .titleMedium
+                                                        .fontStyle,
+                                              ),
+                                              fontSize: 14.0,
+                                              letterSpacing: 0.0,
+                                              fontWeight:
+                                                  FlutterFlowTheme.of(context)
+                                                      .titleMedium
+                                                      .fontWeight,
+                                              fontStyle:
+                                                  FlutterFlowTheme.of(context)
+                                                      .titleMedium
+                                                      .fontStyle,
+                                            ),
                                         unselectedLabelStyle: TextStyle(),
                                         indicatorColor:
-                                        FlutterFlowTheme.of(context)
-                                            .primaryText,
+                                            FlutterFlowTheme.of(context)
+                                                .primaryText,
                                         padding: EdgeInsets.all(4.0),
                                         tabs: [
                                           Tab(
@@ -248,9 +274,9 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
                                         controller: _model.tabBarController,
                                         onTap: (i) async {
                                           [
-                                                () async {},
-                                                () async {},
-                                                () async {}
+                                            () async {},
+                                            () async {},
+                                            () async {}
                                           ][i]();
                                         },
                                       ),
@@ -262,24 +288,24 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
                                           Builder(
                                             builder: (context) {
                                               final audios = LaravelGroup
-                                                  .playlistItemsCall
-                                                  .dataList(
-                                                playlistPlaylistItemsResponse
-                                                    .jsonBody,
-                                              )
-                                                  ?.where((e) =>
-                                              functions.jsonToint(e,
-                                                  'post_type_id') ==
-                                                  1)
-                                                  .toList()
-                                                  .map((e) => e)
-                                                  .toList()
-                                                  .toList() ??
+                                                      .playlistItemsCall
+                                                      .dataList(
+                                                        playlistPlaylistItemsResponse
+                                                            .jsonBody,
+                                                      )
+                                                      ?.where((e) =>
+                                                          functions.jsonToint(e,
+                                                              'post_type_id') ==
+                                                          1)
+                                                      .toList()
+                                                      .map((e) => e)
+                                                      .toList()
+                                                      .toList() ??
                                                   [];
                                               if (audios.isEmpty) {
                                                 return EmptyWidget();
                                               }
-      
+
                                               return ListView.separated(
                                                 padding: EdgeInsets.zero,
                                                 primary: false,
@@ -291,20 +317,21 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
                                                 itemBuilder:
                                                     (context, audiosIndex) {
                                                   final audiosItem =
-                                                  audios[audiosIndex];
+                                                      audios[audiosIndex];
                                                   return Padding(
-                                                    padding: EdgeInsetsDirectional
-                                                        .fromSTEB(
-                                                        20.0, 8.0, 20.0, 0.0),
+                                                    padding:
+                                                        EdgeInsetsDirectional
+                                                            .fromSTEB(20.0, 8.0,
+                                                                20.0, 0.0),
                                                     child: Container(
                                                       decoration: BoxDecoration(
                                                         borderRadius:
-                                                        BorderRadius.circular(
-                                                            14.0),
+                                                            BorderRadius
+                                                                .circular(14.0),
                                                       ),
                                                       child: Column(
                                                         mainAxisSize:
-                                                        MainAxisSize.max,
+                                                            MainAxisSize.max,
                                                         children: [
                                                           InkWell(
                                                             splashColor: Colors
@@ -313,95 +340,179 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
                                                                 .transparent,
                                                             hoverColor: Colors
                                                                 .transparent,
-                                                            highlightColor: Colors
-                                                                .transparent,
+                                                            highlightColor:
+                                                                Colors
+                                                                    .transparent,
                                                             onTap: () async {
-                                                              logFirebaseEvent(
-                                                                  'PLAYLIST_PAGE_Row_b3f19l8v_ON_TAP');
-                                                              logFirebaseEvent(
-                                                                  'Row_update_app_state');
-                                                              FFAppState()
-                                                                  .audioUrl =
-                                                                  getJsonField(
-                                                                    audiosItem,
-                                                                    r'''$.data''',
-                                                                  ).toString();
-                                                              FFAppState()
-                                                                  .currentAudioTrack =
-                                                                  audiosItem;
-                                                              FFAppState()
-                                                                  .AudioPlayerSongIndex =
-                                                                  audiosIndex;
-                                                              FFAppState().AudioPlayerList = LaravelGroup
-                                                                  .playlistItemsCall
-                                                                  .dataList(
-                                                                playlistPlaylistItemsResponse
-                                                                    .jsonBody,
-                                                              )!
-                                                                  .where((e) =>
-                                                              functions
-                                                                  .jsonToint(
-                                                                  e,
-                                                                  'post_type_id') ==
-                                                                  1)
-                                                                  .toList()
-                                                                  .cast<
-                                                                  dynamic>();
-                                                              safeSetState(() {});
+                                                              // Open MainPlayerView immediately as a modal overlay
+                                                              Navigator.of(
+                                                                      context,
+                                                                      rootNavigator:
+                                                                          true)
+                                                                  .push(
+                                                                PageRouteBuilder(
+                                                                  opaque: false,
+                                                                  pageBuilder: (_,
+                                                                          __,
+                                                                          ___) =>
+                                                                      const MainPlayerView(),
+                                                                ),
+                                                              );
+                                                              final pageManager =
+                                                                  GetIt.I<
+                                                                      PageManager>();
+                                                              pageManager
+                                                                  .setLoadingNewAudio(
+                                                                      true);
+                                                              pageManager
+                                                                      .playButtonNotifier
+                                                                      .value =
+                                                                  ButtonState
+                                                                      .loading;
+                                                              pageManager
+                                                                  .currentSongNotifier
+                                                                  .value = null;
+                                                              await pageManager
+                                                                  .audioHandler
+                                                                  .stop();
+                                                              final urls = await Future.wait(audios.map((item) =>
+                                                                  getPlayableUrl(
+                                                                      getJsonField(
+                                                                          item,
+                                                                          r'$.data'))));
+                                                              final playlist =
+                                                                  <MediaItem>[];
+                                                              for (int i = 0;
+                                                                  i <
+                                                                      audios
+                                                                          .length;
+                                                                  i++) {
+                                                                final item =
+                                                                    audios[i];
+                                                                final url =
+                                                                    urls[i];
+                                                                final itemMap =
+                                                                    {
+                                                                  'id': getJsonField(
+                                                                      item,
+                                                                      r'$.id'),
+                                                                  'album':
+                                                                      getJsonField(
+                                                                          item,
+                                                                          r'$.album'),
+                                                                  'artist':
+                                                                      getJsonField(
+                                                                          item,
+                                                                          r'$.author'),
+                                                                  'duration':
+                                                                      getJsonField(
+                                                                              item,
+                                                                              r'$.duration') ??
+                                                                          180,
+                                                                  'title':
+                                                                      getJsonField(
+                                                                          item,
+                                                                          r'$.title'),
+                                                                  'image':
+                                                                      getJsonField(
+                                                                          item,
+                                                                          r'$.image'),
+                                                                  'language':
+                                                                      getJsonField(
+                                                                          item,
+                                                                          r'$.language'),
+                                                                  'url': url,
+                                                                  'user_id':
+                                                                      getJsonField(
+                                                                          item,
+                                                                          r'$.artistsId'),
+                                                                  'user_name':
+                                                                      getJsonField(
+                                                                          item,
+                                                                          r'$.artists'),
+                                                                  'album_id':
+                                                                      getJsonField(
+                                                                          item,
+                                                                          r'$.album_id'),
+                                                                  'extra': {
+                                                                    'json':
+                                                                        item,
+                                                                    'date': getJsonField(
+                                                                        item,
+                                                                        r'$.date'),
+                                                                    'country':
+                                                                        getJsonField(
+                                                                            item,
+                                                                            r'$.country'),
+                                                                    'city': getJsonField(
+                                                                        item,
+                                                                        r'$.city'),
+                                                                  },
+                                                                };
+                                                                playlist.add(
+                                                                    await MediaItemConverter
+                                                                        .mapToMediaItem(
+                                                                            itemMap));
+                                                              }
+                                                              await (pageManager
+                                                                          .audioHandler
+                                                                      as MyAudioHandler)
+                                                                  .setNewPlaylist(
+                                                                      playlist,
+                                                                      audiosIndex);
                                                               logFirebaseEvent(
                                                                   'Row_navigate_to');
-      
-                                                              context.pushNamed(
-                                                                NowPlayingPageWidget
-                                                                    .routeName,
-                                                                queryParameters: {
-                                                                  'currentAudio':
-                                                                  serializeParam(
-                                                                    audiosItem,
-                                                                    ParamType
-                                                                        .JSON,
-                                                                  ),
-                                                                  'chapters':
-                                                                  serializeParam(
-                                                                    LaravelGroup
-                                                                        .playlistItemsCall
-                                                                        .dataList(
-                                                                      playlistPlaylistItemsResponse
-                                                                          .jsonBody,
-                                                                    )
-                                                                        ?.where((e) =>
-                                                                    functions.jsonToint(
-                                                                        e,
-                                                                        'post_type_id') ==
-                                                                        1)
-                                                                        .toList(),
-                                                                    ParamType
-                                                                        .JSON,
-                                                                    isList: true,
-                                                                  ),
-                                                                  'currentAudioIndex':
-                                                                  serializeParam(
-                                                                    audiosIndex,
-                                                                    ParamType.int,
-                                                                  ),
-                                                                }.withoutNulls,
-                                                              );
+
+                                                              // context.pushNamed(
+                                                              //   NowPlayingPageWidget
+                                                              //       .routeName,
+                                                              //   queryParameters: {
+                                                              //     'currentAudio':
+                                                              //     serializeParam(
+                                                              //       audiosItem,
+                                                              //       ParamType
+                                                              //           .JSON,
+                                                              //     ),
+                                                              //     'chapters':
+                                                              //     serializeParam(
+                                                              //       LaravelGroup
+                                                              //           .playlistItemsCall
+                                                              //           .dataList(
+                                                              //         playlistPlaylistItemsResponse
+                                                              //             .jsonBody,
+                                                              //       )
+                                                              //           ?.where((e) =>
+                                                              //       functions.jsonToint(
+                                                              //           e,
+                                                              //           'post_type_id') ==
+                                                              //           1)
+                                                              //           .toList(),
+                                                              //       ParamType
+                                                              //           .JSON,
+                                                              //       isList: true,
+                                                              //     ),
+                                                              //     'currentAudioIndex':
+                                                              //     serializeParam(
+                                                              //       audiosIndex,
+                                                              //       ParamType.int,
+                                                              //     ),
+                                                              //   }.withoutNulls,
+                                                              // );
                                                             },
                                                             child: Row(
                                                               mainAxisSize:
-                                                              MainAxisSize
-                                                                  .max,
+                                                                  MainAxisSize
+                                                                      .max,
                                                               children: [
                                                                 if (getJsonField(
-                                                                  audiosItem,
-                                                                  r'''$.image''',
-                                                                ) !=
+                                                                      audiosItem,
+                                                                      r'''$.image''',
+                                                                    ) !=
                                                                     null)
                                                                   ClipRRect(
                                                                     borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
-                                                                        8.0),
+                                                                        BorderRadius.circular(
+                                                                            8.0),
                                                                     child: Image
                                                                         .network(
                                                                       getJsonField(
@@ -409,81 +520,83 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
                                                                         r'''$.image''',
                                                                       ).toString(),
                                                                       width:
-                                                                      104.0,
+                                                                          104.0,
                                                                       height:
-                                                                      104.0,
+                                                                          104.0,
                                                                       fit: BoxFit
                                                                           .cover,
                                                                       errorBuilder: (context,
-                                                                          error,
-                                                                          stackTrace) =>
+                                                                              error,
+                                                                              stackTrace) =>
                                                                           Image
                                                                               .asset(
-                                                                            'assets/images/error_image.png',
-                                                                            width:
+                                                                        'assets/images/error_image.png',
+                                                                        width:
                                                                             104.0,
-                                                                            height:
+                                                                        height:
                                                                             104.0,
-                                                                            fit: BoxFit
-                                                                                .cover,
-                                                                          ),
+                                                                        fit: BoxFit
+                                                                            .cover,
+                                                                      ),
                                                                     ),
                                                                   ),
                                                                 if (getJsonField(
-                                                                  audiosItem,
-                                                                  r'''$.image''',
-                                                                ) ==
+                                                                      audiosItem,
+                                                                      r'''$.image''',
+                                                                    ) ==
                                                                     null)
                                                                   ClipRRect(
                                                                     borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
-                                                                        8.0),
+                                                                        BorderRadius.circular(
+                                                                            8.0),
                                                                     child: Image
                                                                         .asset(
                                                                       'assets/images/AboutImage.png',
                                                                       width:
-                                                                      104.0,
+                                                                          104.0,
                                                                       height:
-                                                                      104.0,
+                                                                          104.0,
                                                                       fit: BoxFit
                                                                           .cover,
                                                                       alignment:
-                                                                      Alignment(
-                                                                          -1.0,
-                                                                          0.0),
+                                                                          Alignment(
+                                                                              -1.0,
+                                                                              0.0),
                                                                     ),
                                                                   ),
                                                                 Flexible(
-                                                                  child: Padding(
+                                                                  child:
+                                                                      Padding(
                                                                     padding: EdgeInsetsDirectional
                                                                         .fromSTEB(
-                                                                        16.0,
-                                                                        0.0,
-                                                                        16.0,
-                                                                        0.0),
-                                                                    child: Column(
+                                                                            16.0,
+                                                                            0.0,
+                                                                            16.0,
+                                                                            0.0),
+                                                                    child:
+                                                                        Column(
                                                                       mainAxisSize:
-                                                                      MainAxisSize
-                                                                          .max,
+                                                                          MainAxisSize
+                                                                              .max,
                                                                       mainAxisAlignment:
-                                                                      MainAxisAlignment
-                                                                          .spaceBetween,
+                                                                          MainAxisAlignment
+                                                                              .spaceBetween,
                                                                       crossAxisAlignment:
-                                                                      CrossAxisAlignment
-                                                                          .start,
-                                                                      children: [
+                                                                          CrossAxisAlignment
+                                                                              .start,
+                                                                      children:
+                                                                          [
                                                                         SingleChildScrollView(
                                                                           scrollDirection:
-                                                                          Axis.horizontal,
+                                                                              Axis.horizontal,
                                                                           child:
-                                                                          Row(
+                                                                              Row(
                                                                             mainAxisSize:
-                                                                            MainAxisSize.max,
+                                                                                MainAxisSize.max,
                                                                             mainAxisAlignment:
-                                                                            MainAxisAlignment.spaceBetween,
+                                                                                MainAxisAlignment.spaceBetween,
                                                                             crossAxisAlignment:
-                                                                            CrossAxisAlignment.start,
+                                                                                CrossAxisAlignment.start,
                                                                             children: [
                                                                               Text(
                                                                                 getJsonField(
@@ -491,30 +604,30 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
                                                                                   r'''$.title''',
                                                                                 ).toString(),
                                                                                 style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                                                                  font: GoogleFonts.poppins(
-                                                                                    fontWeight: FontWeight.w500,
-                                                                                    fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                                  ),
-                                                                                  color: Color(0xFF232323),
-                                                                                  fontSize: 16.0,
-                                                                                  letterSpacing: 0.0,
-                                                                                  fontWeight: FontWeight.w500,
-                                                                                  fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                                ),
+                                                                                      font: GoogleFonts.poppins(
+                                                                                        fontWeight: FontWeight.w500,
+                                                                                        fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                      ),
+                                                                                      color: Color(0xFF232323),
+                                                                                      fontSize: 16.0,
+                                                                                      letterSpacing: 0.0,
+                                                                                      fontWeight: FontWeight.w500,
+                                                                                      fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                    ),
                                                                               ),
                                                                             ],
                                                                           ),
                                                                         ),
                                                                         Row(
                                                                           mainAxisSize:
-                                                                          MainAxisSize.max,
+                                                                              MainAxisSize.max,
                                                                           mainAxisAlignment:
-                                                                          MainAxisAlignment.start,
+                                                                              MainAxisAlignment.start,
                                                                           children: [
                                                                             if (getJsonField(
-                                                                              audiosItem,
-                                                                              r'''$.shloka_part''',
-                                                                            ) !=
+                                                                                  audiosItem,
+                                                                                  r'''$.shloka_part''',
+                                                                                ) !=
                                                                                 null)
                                                                               Flexible(
                                                                                 child: Text(
@@ -528,23 +641,23 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
                                                                                         r'''$.shloka_chapter''',
                                                                                       ).toString()),
                                                                                   style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                                                                    font: GoogleFonts.poppins(
-                                                                                      fontWeight: FontWeight.w500,
-                                                                                      fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                                    ),
-                                                                                    color: FlutterFlowTheme.of(context).backGrey,
-                                                                                    fontSize: 13.0,
-                                                                                    letterSpacing: 0.0,
-                                                                                    fontWeight: FontWeight.w500,
-                                                                                    fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                                    lineHeight: 1.5,
-                                                                                  ),
+                                                                                        font: GoogleFonts.poppins(
+                                                                                          fontWeight: FontWeight.w500,
+                                                                                          fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                        ),
+                                                                                        color: FlutterFlowTheme.of(context).backGrey,
+                                                                                        fontSize: 13.0,
+                                                                                        letterSpacing: 0.0,
+                                                                                        fontWeight: FontWeight.w500,
+                                                                                        fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                        lineHeight: 1.5,
+                                                                                      ),
                                                                                 ),
                                                                               ),
                                                                             if (getJsonField(
-                                                                              audiosItem,
-                                                                              r'''$.part''',
-                                                                            ) !=
+                                                                                  audiosItem,
+                                                                                  r'''$.part''',
+                                                                                ) !=
                                                                                 null)
                                                                               SizedBox(
                                                                                 height: 16.0,
@@ -554,9 +667,9 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
                                                                                 ),
                                                                               ),
                                                                             if (getJsonField(
-                                                                              audiosItem,
-                                                                              r'''$.city''',
-                                                                            ) !=
+                                                                                  audiosItem,
+                                                                                  r'''$.city''',
+                                                                                ) !=
                                                                                 null)
                                                                               Text(
                                                                                 getJsonField(
@@ -564,27 +677,27 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
                                                                                   r'''$.city''',
                                                                                 ).toString(),
                                                                                 style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                                                                  font: GoogleFonts.poppins(
-                                                                                    fontWeight: FontWeight.w500,
-                                                                                    fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                                  ),
-                                                                                  color: FlutterFlowTheme.of(context).backGrey,
-                                                                                  fontSize: 13.0,
-                                                                                  letterSpacing: 0.0,
-                                                                                  fontWeight: FontWeight.w500,
-                                                                                  fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                                  lineHeight: 1.5,
-                                                                                ),
+                                                                                      font: GoogleFonts.poppins(
+                                                                                        fontWeight: FontWeight.w500,
+                                                                                        fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                      ),
+                                                                                      color: FlutterFlowTheme.of(context).backGrey,
+                                                                                      fontSize: 13.0,
+                                                                                      letterSpacing: 0.0,
+                                                                                      fontWeight: FontWeight.w500,
+                                                                                      fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                      lineHeight: 1.5,
+                                                                                    ),
                                                                               ),
                                                                             if ((getJsonField(
-                                                                              audiosItem,
-                                                                              r'''$.city''',
-                                                                            ) !=
-                                                                                null) &&
+                                                                                      audiosItem,
+                                                                                      r'''$.city''',
+                                                                                    ) !=
+                                                                                    null) &&
                                                                                 (getJsonField(
-                                                                                  audiosItem,
-                                                                                  r'''$.date''',
-                                                                                ) !=
+                                                                                      audiosItem,
+                                                                                      r'''$.date''',
+                                                                                    ) !=
                                                                                     null))
                                                                               SizedBox(
                                                                                 height: 16.0,
@@ -594,9 +707,9 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
                                                                                 ),
                                                                               ),
                                                                             if (getJsonField(
-                                                                              audiosItem,
-                                                                              r'''$.date''',
-                                                                            ) !=
+                                                                                  audiosItem,
+                                                                                  r'''$.date''',
+                                                                                ) !=
                                                                                 null)
                                                                               Text(
                                                                                 valueOrDefault<String>(
@@ -611,17 +724,17 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
                                                                                   '-',
                                                                                 ),
                                                                                 style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                                                                  font: GoogleFonts.poppins(
-                                                                                    fontWeight: FontWeight.w500,
-                                                                                    fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                                  ),
-                                                                                  color: FlutterFlowTheme.of(context).backGrey,
-                                                                                  fontSize: 13.0,
-                                                                                  letterSpacing: 0.0,
-                                                                                  fontWeight: FontWeight.w500,
-                                                                                  fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                                  lineHeight: 1.5,
-                                                                                ),
+                                                                                      font: GoogleFonts.poppins(
+                                                                                        fontWeight: FontWeight.w500,
+                                                                                        fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                      ),
+                                                                                      color: FlutterFlowTheme.of(context).backGrey,
+                                                                                      fontSize: 13.0,
+                                                                                      letterSpacing: 0.0,
+                                                                                      fontWeight: FontWeight.w500,
+                                                                                      fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                      lineHeight: 1.5,
+                                                                                    ),
                                                                               ),
                                                                           ],
                                                                         ),
@@ -632,11 +745,11 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
                                                                               0.0,
                                                                               0.0),
                                                                           child:
-                                                                          Row(
+                                                                              Row(
                                                                             mainAxisSize:
-                                                                            MainAxisSize.max,
+                                                                                MainAxisSize.max,
                                                                             mainAxisAlignment:
-                                                                            MainAxisAlignment.spaceBetween,
+                                                                                MainAxisAlignment.spaceBetween,
                                                                             children: [
                                                                               Container(
                                                                                 decoration: BoxDecoration(
@@ -660,16 +773,16 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
                                                                                           '1zrptsoc' /* Play */,
                                                                                         ),
                                                                                         style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                                                                          font: GoogleFonts.poppins(
-                                                                                            fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
-                                                                                            fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                                          ),
-                                                                                          color: FlutterFlowTheme.of(context).secondaryBackground,
-                                                                                          fontSize: 13.0,
-                                                                                          letterSpacing: 0.0,
-                                                                                          fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
-                                                                                          fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                                        ),
+                                                                                              font: GoogleFonts.poppins(
+                                                                                                fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                                                fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                              ),
+                                                                                              color: FlutterFlowTheme.of(context).secondaryBackground,
+                                                                                              fontSize: 13.0,
+                                                                                              letterSpacing: 0.0,
+                                                                                              fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                                              fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                            ),
                                                                                       ),
                                                                                     ],
                                                                                   ),
@@ -828,8 +941,7 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
                                                                           ),
                                                                         ),
                                                                       ].divide(SizedBox(
-                                                                          height:
-                                                                          8.0)),
+                                                                              height: 8.0)),
                                                                     ),
                                                                   ),
                                                                 ),
@@ -838,8 +950,8 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
                                                           ),
                                                           Divider(
                                                             thickness: 1.0,
-                                                            color:
-                                                            Color(0xFFD9D9D9),
+                                                            color: Color(
+                                                                0xFFD9D9D9),
                                                           ),
                                                         ].divide(SizedBox(
                                                             height: 8.0)),
@@ -853,48 +965,50 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
                                           Builder(
                                             builder: (context) {
                                               final prabhupadaList = LaravelGroup
-                                                  .playlistItemsCall
-                                                  .dataList(
-                                                playlistPlaylistItemsResponse
-                                                    .jsonBody,
-                                              )
-                                                  ?.where((e) =>
-                                              functions.jsonToint(e,
-                                                  'post_type_id') ==
-                                                  3)
-                                                  .toList()
-                                                  .toList() ??
+                                                      .playlistItemsCall
+                                                      .dataList(
+                                                        playlistPlaylistItemsResponse
+                                                            .jsonBody,
+                                                      )
+                                                      ?.where((e) =>
+                                                          functions.jsonToint(e,
+                                                              'post_type_id') ==
+                                                          3)
+                                                      .toList()
+                                                      .toList() ??
                                                   [];
                                               if (prabhupadaList.isEmpty) {
                                                 return EmptyWidget();
                                               }
-      
+
                                               return ListView.separated(
                                                 padding: EdgeInsets.zero,
                                                 primary: false,
                                                 shrinkWrap: true,
                                                 scrollDirection: Axis.vertical,
-                                                itemCount: prabhupadaList.length,
+                                                itemCount:
+                                                    prabhupadaList.length,
                                                 separatorBuilder: (_, __) =>
                                                     SizedBox(height: 8.0),
                                                 itemBuilder: (context,
                                                     prabhupadaListIndex) {
                                                   final prabhupadaListItem =
-                                                  prabhupadaList[
-                                                  prabhupadaListIndex];
+                                                      prabhupadaList[
+                                                          prabhupadaListIndex];
                                                   return Padding(
-                                                    padding: EdgeInsetsDirectional
-                                                        .fromSTEB(
-                                                        20.0, 8.0, 20.0, 0.0),
+                                                    padding:
+                                                        EdgeInsetsDirectional
+                                                            .fromSTEB(20.0, 8.0,
+                                                                20.0, 0.0),
                                                     child: Container(
                                                       decoration: BoxDecoration(
                                                         borderRadius:
-                                                        BorderRadius.circular(
-                                                            14.0),
+                                                            BorderRadius
+                                                                .circular(14.0),
                                                       ),
                                                       child: Column(
                                                         mainAxisSize:
-                                                        MainAxisSize.max,
+                                                            MainAxisSize.max,
                                                         children: [
                                                           InkWell(
                                                             splashColor: Colors
@@ -903,95 +1017,180 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
                                                                 .transparent,
                                                             hoverColor: Colors
                                                                 .transparent,
-                                                            highlightColor: Colors
-                                                                .transparent,
+                                                            highlightColor:
+                                                                Colors
+                                                                    .transparent,
                                                             onTap: () async {
-                                                              logFirebaseEvent(
-                                                                  'PLAYLIST_PAGE_Row_m0tswvx5_ON_TAP');
-                                                              logFirebaseEvent(
-                                                                  'Row_update_app_state');
-                                                              FFAppState()
-                                                                  .audioUrl =
-                                                                  getJsonField(
-                                                                    prabhupadaListItem,
-                                                                    r'''$.data''',
-                                                                  ).toString();
-                                                              FFAppState()
-                                                                  .currentAudioTrack =
-                                                                  prabhupadaListItem;
-                                                              FFAppState()
-                                                                  .AudioPlayerSongIndex =
-                                                                  prabhupadaListIndex;
-                                                              FFAppState().AudioPlayerList = LaravelGroup
-                                                                  .playlistItemsCall
-                                                                  .dataList(
-                                                                playlistPlaylistItemsResponse
-                                                                    .jsonBody,
-                                                              )!
-                                                                  .where((e) =>
-                                                              functions
-                                                                  .jsonToint(
-                                                                  e,
-                                                                  'post_type_id') ==
-                                                                  3)
-                                                                  .toList()
-                                                                  .cast<
-                                                                  dynamic>();
-                                                              safeSetState(() {});
+                                                              // Open MainPlayerView immediately as a modal overlay
+                                                              Navigator.of(
+                                                                      context,
+                                                                      rootNavigator:
+                                                                          true)
+                                                                  .push(
+                                                                PageRouteBuilder(
+                                                                  opaque: false,
+                                                                  pageBuilder: (_,
+                                                                          __,
+                                                                          ___) =>
+                                                                      const MainPlayerView(),
+                                                                ),
+                                                              );
+                                                              final pageManager =
+                                                                  GetIt.I<
+                                                                      PageManager>();
+                                                              pageManager
+                                                                  .setLoadingNewAudio(
+                                                                      true);
+                                                              pageManager
+                                                                      .playButtonNotifier
+                                                                      .value =
+                                                                  ButtonState
+                                                                      .loading;
+                                                              pageManager
+                                                                  .currentSongNotifier
+                                                                  .value = null;
+                                                              await pageManager
+                                                                  .audioHandler
+                                                                  .stop();
+                                                              final urls = await Future.wait(prabhupadaList.map((item) =>
+                                                                  getPlayableUrl(
+                                                                      getJsonField(
+                                                                          item,
+                                                                          r'$.data'))));
+                                                              final playlist =
+                                                                  <MediaItem>[];
+                                                              for (int i = 0;
+                                                                  i <
+                                                                      prabhupadaList
+                                                                          .length;
+                                                                  i++) {
+                                                                final item =
+                                                                    prabhupadaList[
+                                                                        i];
+                                                                final url =
+                                                                    urls[i];
+                                                                final itemMap =
+                                                                    {
+                                                                  'id': getJsonField(
+                                                                      item,
+                                                                      r'$.id'),
+                                                                  'album':
+                                                                      getJsonField(
+                                                                          item,
+                                                                          r'$.album'),
+                                                                  'artist':
+                                                                      getJsonField(
+                                                                          item,
+                                                                          r'$.author'),
+                                                                  'duration':
+                                                                      getJsonField(
+                                                                              item,
+                                                                              r'$.duration') ??
+                                                                          180,
+                                                                  'title':
+                                                                      getJsonField(
+                                                                          item,
+                                                                          r'$.title'),
+                                                                  'image':
+                                                                      getJsonField(
+                                                                          item,
+                                                                          r'$.image'),
+                                                                  'language':
+                                                                      getJsonField(
+                                                                          item,
+                                                                          r'$.language'),
+                                                                  'url': url,
+                                                                  'user_id':
+                                                                      getJsonField(
+                                                                          item,
+                                                                          r'$.artistsId'),
+                                                                  'user_name':
+                                                                      getJsonField(
+                                                                          item,
+                                                                          r'$.artists'),
+                                                                  'album_id':
+                                                                      getJsonField(
+                                                                          item,
+                                                                          r'$.album_id'),
+                                                                  'extra': {
+                                                                    'json':
+                                                                        item,
+                                                                    'date': getJsonField(
+                                                                        item,
+                                                                        r'$.date'),
+                                                                    'country':
+                                                                        getJsonField(
+                                                                            item,
+                                                                            r'$.country'),
+                                                                    'city': getJsonField(
+                                                                        item,
+                                                                        r'$.city'),
+                                                                  },
+                                                                };
+                                                                playlist.add(
+                                                                    await MediaItemConverter
+                                                                        .mapToMediaItem(
+                                                                            itemMap));
+                                                              }
+                                                              await (pageManager
+                                                                          .audioHandler
+                                                                      as MyAudioHandler)
+                                                                  .setNewPlaylist(
+                                                                      playlist,
+                                                                      prabhupadaListIndex);
                                                               logFirebaseEvent(
                                                                   'Row_navigate_to');
-      
-                                                              context.pushNamed(
-                                                                NowPlayingPageWidget
-                                                                    .routeName,
-                                                                queryParameters: {
-                                                                  'currentAudio':
-                                                                  serializeParam(
-                                                                    prabhupadaListItem,
-                                                                    ParamType
-                                                                        .JSON,
-                                                                  ),
-                                                                  'chapters':
-                                                                  serializeParam(
-                                                                    LaravelGroup
-                                                                        .playlistItemsCall
-                                                                        .dataList(
-                                                                      playlistPlaylistItemsResponse
-                                                                          .jsonBody,
-                                                                    )
-                                                                        ?.where((e) =>
-                                                                    functions.jsonToint(
-                                                                        e,
-                                                                        'post_type_id') ==
-                                                                        3)
-                                                                        .toList(),
-                                                                    ParamType
-                                                                        .JSON,
-                                                                    isList: true,
-                                                                  ),
-                                                                  'currentAudioIndex':
-                                                                  serializeParam(
-                                                                    prabhupadaListIndex,
-                                                                    ParamType.int,
-                                                                  ),
-                                                                }.withoutNulls,
-                                                              );
+
+                                                              // context.pushNamed(
+                                                              //   NowPlayingPageWidget
+                                                              //       .routeName,
+                                                              //   queryParameters: {
+                                                              //     'currentAudio':
+                                                              //     serializeParam(
+                                                              //       prabhupadaListItem,
+                                                              //       ParamType
+                                                              //           .JSON,
+                                                              //     ),
+                                                              //     'chapters':
+                                                              //     serializeParam(
+                                                              //       LaravelGroup
+                                                              //           .playlistItemsCall
+                                                              //           .dataList(
+                                                              //         playlistPlaylistItemsResponse
+                                                              //             .jsonBody,
+                                                              //       )
+                                                              //           ?.where((e) =>
+                                                              //       functions.jsonToint(
+                                                              //           e,
+                                                              //           'post_type_id') ==
+                                                              //           3)
+                                                              //           .toList(),
+                                                              //       ParamType
+                                                              //           .JSON,
+                                                              //       isList: true,
+                                                              //     ),
+                                                              //     'currentAudioIndex':
+                                                              //     serializeParam(
+                                                              //       prabhupadaListIndex,
+                                                              //       ParamType.int,
+                                                              //     ),
+                                                              //   }.withoutNulls,
+                                                              // );
                                                             },
                                                             child: Row(
                                                               mainAxisSize:
-                                                              MainAxisSize
-                                                                  .max,
+                                                                  MainAxisSize
+                                                                      .max,
                                                               children: [
                                                                 if (getJsonField(
-                                                                  prabhupadaListItem,
-                                                                  r'''$.image''',
-                                                                ) !=
+                                                                      prabhupadaListItem,
+                                                                      r'''$.image''',
+                                                                    ) !=
                                                                     null)
                                                                   ClipRRect(
                                                                     borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
-                                                                        8.0),
+                                                                        BorderRadius.circular(
+                                                                            8.0),
                                                                     child: Image
                                                                         .network(
                                                                       getJsonField(
@@ -999,81 +1198,83 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
                                                                         r'''$.image''',
                                                                       ).toString(),
                                                                       width:
-                                                                      104.0,
+                                                                          104.0,
                                                                       height:
-                                                                      104.0,
+                                                                          104.0,
                                                                       fit: BoxFit
                                                                           .cover,
                                                                       errorBuilder: (context,
-                                                                          error,
-                                                                          stackTrace) =>
+                                                                              error,
+                                                                              stackTrace) =>
                                                                           Image
                                                                               .asset(
-                                                                            'assets/images/error_image.png',
-                                                                            width:
+                                                                        'assets/images/error_image.png',
+                                                                        width:
                                                                             104.0,
-                                                                            height:
+                                                                        height:
                                                                             104.0,
-                                                                            fit: BoxFit
-                                                                                .cover,
-                                                                          ),
+                                                                        fit: BoxFit
+                                                                            .cover,
+                                                                      ),
                                                                     ),
                                                                   ),
                                                                 if (getJsonField(
-                                                                  prabhupadaListItem,
-                                                                  r'''$.image''',
-                                                                ) ==
+                                                                      prabhupadaListItem,
+                                                                      r'''$.image''',
+                                                                    ) ==
                                                                     null)
                                                                   ClipRRect(
                                                                     borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
-                                                                        8.0),
+                                                                        BorderRadius.circular(
+                                                                            8.0),
                                                                     child: Image
                                                                         .asset(
                                                                       'assets/images/AboutImage.png',
                                                                       width:
-                                                                      104.0,
+                                                                          104.0,
                                                                       height:
-                                                                      104.0,
+                                                                          104.0,
                                                                       fit: BoxFit
                                                                           .cover,
                                                                       alignment:
-                                                                      Alignment(
-                                                                          -1.0,
-                                                                          0.0),
+                                                                          Alignment(
+                                                                              -1.0,
+                                                                              0.0),
                                                                     ),
                                                                   ),
                                                                 Flexible(
-                                                                  child: Padding(
+                                                                  child:
+                                                                      Padding(
                                                                     padding: EdgeInsetsDirectional
                                                                         .fromSTEB(
-                                                                        16.0,
-                                                                        0.0,
-                                                                        16.0,
-                                                                        0.0),
-                                                                    child: Column(
+                                                                            16.0,
+                                                                            0.0,
+                                                                            16.0,
+                                                                            0.0),
+                                                                    child:
+                                                                        Column(
                                                                       mainAxisSize:
-                                                                      MainAxisSize
-                                                                          .max,
+                                                                          MainAxisSize
+                                                                              .max,
                                                                       mainAxisAlignment:
-                                                                      MainAxisAlignment
-                                                                          .spaceBetween,
+                                                                          MainAxisAlignment
+                                                                              .spaceBetween,
                                                                       crossAxisAlignment:
-                                                                      CrossAxisAlignment
-                                                                          .start,
-                                                                      children: [
+                                                                          CrossAxisAlignment
+                                                                              .start,
+                                                                      children:
+                                                                          [
                                                                         SingleChildScrollView(
                                                                           scrollDirection:
-                                                                          Axis.horizontal,
+                                                                              Axis.horizontal,
                                                                           child:
-                                                                          Row(
+                                                                              Row(
                                                                             mainAxisSize:
-                                                                            MainAxisSize.max,
+                                                                                MainAxisSize.max,
                                                                             mainAxisAlignment:
-                                                                            MainAxisAlignment.spaceBetween,
+                                                                                MainAxisAlignment.spaceBetween,
                                                                             crossAxisAlignment:
-                                                                            CrossAxisAlignment.start,
+                                                                                CrossAxisAlignment.start,
                                                                             children: [
                                                                               Text(
                                                                                 getJsonField(
@@ -1081,30 +1282,30 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
                                                                                   r'''$.title''',
                                                                                 ).toString(),
                                                                                 style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                                                                  font: GoogleFonts.poppins(
-                                                                                    fontWeight: FontWeight.w500,
-                                                                                    fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                                  ),
-                                                                                  color: Color(0xFF232323),
-                                                                                  fontSize: 16.0,
-                                                                                  letterSpacing: 0.0,
-                                                                                  fontWeight: FontWeight.w500,
-                                                                                  fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                                ),
+                                                                                      font: GoogleFonts.poppins(
+                                                                                        fontWeight: FontWeight.w500,
+                                                                                        fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                      ),
+                                                                                      color: Color(0xFF232323),
+                                                                                      fontSize: 16.0,
+                                                                                      letterSpacing: 0.0,
+                                                                                      fontWeight: FontWeight.w500,
+                                                                                      fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                    ),
                                                                               ),
                                                                             ],
                                                                           ),
                                                                         ),
                                                                         Row(
                                                                           mainAxisSize:
-                                                                          MainAxisSize.max,
+                                                                              MainAxisSize.max,
                                                                           mainAxisAlignment:
-                                                                          MainAxisAlignment.start,
+                                                                              MainAxisAlignment.start,
                                                                           children: [
                                                                             if (getJsonField(
-                                                                              prabhupadaListItem,
-                                                                              r'''$.shloka_part''',
-                                                                            ) !=
+                                                                                  prabhupadaListItem,
+                                                                                  r'''$.shloka_part''',
+                                                                                ) !=
                                                                                 null)
                                                                               Flexible(
                                                                                 child: Text(
@@ -1118,23 +1319,23 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
                                                                                         r'''$.shloka_chapter''',
                                                                                       ).toString()),
                                                                                   style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                                                                    font: GoogleFonts.poppins(
-                                                                                      fontWeight: FontWeight.w500,
-                                                                                      fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                                    ),
-                                                                                    color: FlutterFlowTheme.of(context).backGrey,
-                                                                                    fontSize: 13.0,
-                                                                                    letterSpacing: 0.0,
-                                                                                    fontWeight: FontWeight.w500,
-                                                                                    fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                                    lineHeight: 1.5,
-                                                                                  ),
+                                                                                        font: GoogleFonts.poppins(
+                                                                                          fontWeight: FontWeight.w500,
+                                                                                          fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                        ),
+                                                                                        color: FlutterFlowTheme.of(context).backGrey,
+                                                                                        fontSize: 13.0,
+                                                                                        letterSpacing: 0.0,
+                                                                                        fontWeight: FontWeight.w500,
+                                                                                        fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                        lineHeight: 1.5,
+                                                                                      ),
                                                                                 ),
                                                                               ),
                                                                             if (getJsonField(
-                                                                              prabhupadaListItem,
-                                                                              r'''$.part''',
-                                                                            ) !=
+                                                                                  prabhupadaListItem,
+                                                                                  r'''$.part''',
+                                                                                ) !=
                                                                                 null)
                                                                               SizedBox(
                                                                                 height: 16.0,
@@ -1144,9 +1345,9 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
                                                                                 ),
                                                                               ),
                                                                             if (getJsonField(
-                                                                              prabhupadaListItem,
-                                                                              r'''$.city''',
-                                                                            ) !=
+                                                                                  prabhupadaListItem,
+                                                                                  r'''$.city''',
+                                                                                ) !=
                                                                                 null)
                                                                               Text(
                                                                                 getJsonField(
@@ -1154,27 +1355,27 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
                                                                                   r'''$.city''',
                                                                                 ).toString(),
                                                                                 style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                                                                  font: GoogleFonts.poppins(
-                                                                                    fontWeight: FontWeight.w500,
-                                                                                    fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                                  ),
-                                                                                  color: FlutterFlowTheme.of(context).backGrey,
-                                                                                  fontSize: 13.0,
-                                                                                  letterSpacing: 0.0,
-                                                                                  fontWeight: FontWeight.w500,
-                                                                                  fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                                  lineHeight: 1.5,
-                                                                                ),
+                                                                                      font: GoogleFonts.poppins(
+                                                                                        fontWeight: FontWeight.w500,
+                                                                                        fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                      ),
+                                                                                      color: FlutterFlowTheme.of(context).backGrey,
+                                                                                      fontSize: 13.0,
+                                                                                      letterSpacing: 0.0,
+                                                                                      fontWeight: FontWeight.w500,
+                                                                                      fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                      lineHeight: 1.5,
+                                                                                    ),
                                                                               ),
                                                                             if ((getJsonField(
-                                                                              prabhupadaListItem,
-                                                                              r'''$.city''',
-                                                                            ) !=
-                                                                                null) &&
+                                                                                      prabhupadaListItem,
+                                                                                      r'''$.city''',
+                                                                                    ) !=
+                                                                                    null) &&
                                                                                 (getJsonField(
-                                                                                  prabhupadaListItem,
-                                                                                  r'''$.date''',
-                                                                                ) !=
+                                                                                      prabhupadaListItem,
+                                                                                      r'''$.date''',
+                                                                                    ) !=
                                                                                     null))
                                                                               SizedBox(
                                                                                 height: 16.0,
@@ -1184,9 +1385,9 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
                                                                                 ),
                                                                               ),
                                                                             if (getJsonField(
-                                                                              prabhupadaListItem,
-                                                                              r'''$.date''',
-                                                                            ) !=
+                                                                                  prabhupadaListItem,
+                                                                                  r'''$.date''',
+                                                                                ) !=
                                                                                 null)
                                                                               Text(
                                                                                 valueOrDefault<String>(
@@ -1201,17 +1402,17 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
                                                                                   '-',
                                                                                 ),
                                                                                 style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                                                                  font: GoogleFonts.poppins(
-                                                                                    fontWeight: FontWeight.w500,
-                                                                                    fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                                  ),
-                                                                                  color: FlutterFlowTheme.of(context).backGrey,
-                                                                                  fontSize: 13.0,
-                                                                                  letterSpacing: 0.0,
-                                                                                  fontWeight: FontWeight.w500,
-                                                                                  fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                                  lineHeight: 1.5,
-                                                                                ),
+                                                                                      font: GoogleFonts.poppins(
+                                                                                        fontWeight: FontWeight.w500,
+                                                                                        fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                      ),
+                                                                                      color: FlutterFlowTheme.of(context).backGrey,
+                                                                                      fontSize: 13.0,
+                                                                                      letterSpacing: 0.0,
+                                                                                      fontWeight: FontWeight.w500,
+                                                                                      fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                      lineHeight: 1.5,
+                                                                                    ),
                                                                               ),
                                                                           ],
                                                                         ),
@@ -1222,11 +1423,11 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
                                                                               0.0,
                                                                               0.0),
                                                                           child:
-                                                                          Row(
+                                                                              Row(
                                                                             mainAxisSize:
-                                                                            MainAxisSize.max,
+                                                                                MainAxisSize.max,
                                                                             mainAxisAlignment:
-                                                                            MainAxisAlignment.spaceBetween,
+                                                                                MainAxisAlignment.spaceBetween,
                                                                             children: [
                                                                               Container(
                                                                                 decoration: BoxDecoration(
@@ -1250,16 +1451,16 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
                                                                                           'tx5m0q3z' /* Play */,
                                                                                         ),
                                                                                         style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                                                                          font: GoogleFonts.poppins(
-                                                                                            fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
-                                                                                            fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                                          ),
-                                                                                          color: FlutterFlowTheme.of(context).secondaryBackground,
-                                                                                          fontSize: 13.0,
-                                                                                          letterSpacing: 0.0,
-                                                                                          fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
-                                                                                          fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                                        ),
+                                                                                              font: GoogleFonts.poppins(
+                                                                                                fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                                                fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                              ),
+                                                                                              color: FlutterFlowTheme.of(context).secondaryBackground,
+                                                                                              fontSize: 13.0,
+                                                                                              letterSpacing: 0.0,
+                                                                                              fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                                              fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                            ),
                                                                                       ),
                                                                                     ],
                                                                                   ),
@@ -1418,8 +1619,7 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
                                                                           ),
                                                                         ),
                                                                       ].divide(SizedBox(
-                                                                          height:
-                                                                          8.0)),
+                                                                              height: 8.0)),
                                                                     ),
                                                                   ),
                                                                 ),
@@ -1428,8 +1628,8 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
                                                           ),
                                                           Divider(
                                                             thickness: 1.0,
-                                                            color:
-                                                            Color(0xFFD9D9D9),
+                                                            color: Color(
+                                                                0xFFD9D9D9),
                                                           ),
                                                         ].divide(SizedBox(
                                                             height: 8.0)),
@@ -1443,22 +1643,22 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
                                           Builder(
                                             builder: (context) {
                                               final videoList = LaravelGroup
-                                                  .playlistItemsCall
-                                                  .dataList(
-                                                playlistPlaylistItemsResponse
-                                                    .jsonBody,
-                                              )
-                                                  ?.where((e) =>
-                                              functions.jsonToint(e,
-                                                  'post_type_id') ==
-                                                  7)
-                                                  .toList()
-                                                  .toList() ??
+                                                      .playlistItemsCall
+                                                      .dataList(
+                                                        playlistPlaylistItemsResponse
+                                                            .jsonBody,
+                                                      )
+                                                      ?.where((e) =>
+                                                          functions.jsonToint(e,
+                                                              'post_type_id') ==
+                                                          7)
+                                                      .toList()
+                                                      .toList() ??
                                                   [];
                                               if (videoList.isEmpty) {
                                                 return EmptyWidget();
                                               }
-      
+
                                               return ListView.separated(
                                                 padding: EdgeInsets.zero,
                                                 primary: false,
@@ -1470,20 +1670,21 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
                                                 itemBuilder:
                                                     (context, videoListIndex) {
                                                   final videoListItem =
-                                                  videoList[videoListIndex];
+                                                      videoList[videoListIndex];
                                                   return Padding(
-                                                    padding: EdgeInsetsDirectional
-                                                        .fromSTEB(
-                                                        20.0, 8.0, 20.0, 0.0),
+                                                    padding:
+                                                        EdgeInsetsDirectional
+                                                            .fromSTEB(20.0, 8.0,
+                                                                20.0, 0.0),
                                                     child: Container(
                                                       decoration: BoxDecoration(
                                                         borderRadius:
-                                                        BorderRadius.circular(
-                                                            14.0),
+                                                            BorderRadius
+                                                                .circular(14.0),
                                                       ),
                                                       child: Column(
                                                         mainAxisSize:
-                                                        MainAxisSize.max,
+                                                            MainAxisSize.max,
                                                         children: [
                                                           InkWell(
                                                             splashColor: Colors
@@ -1492,20 +1693,22 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
                                                                 .transparent,
                                                             hoverColor: Colors
                                                                 .transparent,
-                                                            highlightColor: Colors
-                                                                .transparent,
+                                                            highlightColor:
+                                                                Colors
+                                                                    .transparent,
                                                             onTap: () async {
                                                               logFirebaseEvent(
                                                                   'PLAYLIST_PAGE_Row_2axwxq3v_ON_TAP');
                                                               logFirebaseEvent(
                                                                   'Row_navigate_to');
-      
+
                                                               context.pushNamed(
                                                                 VideoPostWidget
                                                                     .routeName,
-                                                                queryParameters: {
+                                                                queryParameters:
+                                                                    {
                                                                   'videoItem':
-                                                                  serializeParam(
+                                                                      serializeParam(
                                                                     videoListItem,
                                                                     ParamType
                                                                         .JSON,
@@ -1515,69 +1718,108 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
                                                             },
                                                             child: Row(
                                                               mainAxisSize:
-                                                              MainAxisSize
-                                                                  .max,
+                                                                  MainAxisSize
+                                                                      .max,
                                                               children: [
                                                                 ClipRRect(
                                                                   borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                      8.0),
-                                                                  child: Image
-                                                                      .network(
-                                                                    getJsonField(
-                                                                      videoListItem,
-                                                                      r'''$.image''',
-                                                                    ).toString(),
-                                                                    width: 144.0,
-                                                                    height: 82.0,
-                                                                    fit: BoxFit
-                                                                        .cover,
-                                                                    errorBuilder: (context,
-                                                                        error,
-                                                                        stackTrace) =>
-                                                                        Image
-                                                                            .asset(
+                                                                      BorderRadius
+                                                                          .circular(
+                                                                              8.0),
+                                                                  child:
+                                                                      Builder(
+                                                                    builder:
+                                                                        (context) {
+                                                                      double
+                                                                          screenWidth =
+                                                                          MediaQuery.of(context)
+                                                                              .size
+                                                                              .width;
+
+                                                                      double
+                                                                          imageWidth;
+                                                                      double
+                                                                          imageHeight;
+
+                                                                      if (screenWidth <
+                                                                          400) {
+                                                                        imageWidth =
+                                                                            90.0;
+                                                                        imageHeight =
+                                                                            65.0;
+                                                                      } else if (screenWidth <
+                                                                          800) {
+                                                                        imageWidth =
+                                                                            100.0;
+                                                                        imageHeight =
+                                                                            72.0;
+                                                                      } else {
+                                                                        imageWidth =
+                                                                            114.0;
+                                                                        imageHeight =
+                                                                            82.0;
+                                                                      }
+
+                                                                      return Image
+                                                                          .network(
+                                                                        getJsonField(videoListItem,
+                                                                                r'''$.image''')
+                                                                            .toString(),
+                                                                        width:
+                                                                            imageWidth,
+                                                                        height:
+                                                                            imageHeight,
+                                                                        fit: BoxFit
+                                                                            .cover,
+                                                                        errorBuilder: (context,
+                                                                                error,
+                                                                                stackTrace) =>
+                                                                            Image.asset(
                                                                           'assets/images/error_image.png',
                                                                           width:
-                                                                          144.0,
+                                                                              imageWidth,
                                                                           height:
-                                                                          82.0,
+                                                                              imageHeight,
                                                                           fit: BoxFit
                                                                               .cover,
                                                                         ),
+                                                                      );
+                                                                    },
                                                                   ),
                                                                 ),
                                                                 Flexible(
-                                                                  child: Padding(
+                                                                  child:
+                                                                      Padding(
                                                                     padding: EdgeInsetsDirectional
                                                                         .fromSTEB(
-                                                                        16.0,
-                                                                        0.0,
-                                                                        16.0,
-                                                                        0.0),
-                                                                    child: Column(
+                                                                            16.0,
+                                                                            0.0,
+                                                                            16.0,
+                                                                            0.0),
+                                                                    child:
+                                                                        Column(
                                                                       mainAxisSize:
-                                                                      MainAxisSize
-                                                                          .max,
+                                                                          MainAxisSize
+                                                                              .max,
                                                                       mainAxisAlignment:
-                                                                      MainAxisAlignment
-                                                                          .spaceBetween,
+                                                                          MainAxisAlignment
+                                                                              .spaceBetween,
                                                                       crossAxisAlignment:
-                                                                      CrossAxisAlignment
-                                                                          .start,
-                                                                      children: [
+                                                                          CrossAxisAlignment
+                                                                              .start,
+                                                                      children:
+                                                                          [
                                                                         SingleChildScrollView(
                                                                           scrollDirection:
-                                                                          Axis.horizontal,
+                                                                              Axis.horizontal,
                                                                           child:
-                                                                          Row(
+                                                                              Row(
                                                                             mainAxisSize:
-                                                                            MainAxisSize.max,
+                                                                                MainAxisSize.max,
                                                                             mainAxisAlignment:
-                                                                            MainAxisAlignment.spaceBetween,
+                                                                                MainAxisAlignment.spaceBetween,
                                                                             crossAxisAlignment:
-                                                                            CrossAxisAlignment.start,
+                                                                                CrossAxisAlignment.start,
                                                                             children: [
                                                                               Text(
                                                                                 getJsonField(
@@ -1585,16 +1827,16 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
                                                                                   r'''$.title''',
                                                                                 ).toString(),
                                                                                 style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                                                                  font: GoogleFonts.poppins(
-                                                                                    fontWeight: FontWeight.w500,
-                                                                                    fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                                  ),
-                                                                                  color: Color(0xFF232323),
-                                                                                  fontSize: 16.0,
-                                                                                  letterSpacing: 0.0,
-                                                                                  fontWeight: FontWeight.w500,
-                                                                                  fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                                ),
+                                                                                      font: GoogleFonts.poppins(
+                                                                                        fontWeight: FontWeight.w500,
+                                                                                        fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                      ),
+                                                                                      color: Color(0xFF232323),
+                                                                                      fontSize: 16.0,
+                                                                                      letterSpacing: 0.0,
+                                                                                      fontWeight: FontWeight.w500,
+                                                                                      fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                    ),
                                                                               ),
                                                                             ],
                                                                           ),
@@ -1606,11 +1848,11 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
                                                                               0.0,
                                                                               0.0),
                                                                           child:
-                                                                          Row(
+                                                                              Row(
                                                                             mainAxisSize:
-                                                                            MainAxisSize.max,
+                                                                                MainAxisSize.max,
                                                                             mainAxisAlignment:
-                                                                            MainAxisAlignment.spaceBetween,
+                                                                                MainAxisAlignment.spaceBetween,
                                                                             children: [
                                                                               Container(
                                                                                 decoration: BoxDecoration(
@@ -1634,16 +1876,16 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
                                                                                           '0ofdiyip' /* Play */,
                                                                                         ),
                                                                                         style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                                                                          font: GoogleFonts.poppins(
-                                                                                            fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
-                                                                                            fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                                          ),
-                                                                                          color: FlutterFlowTheme.of(context).secondaryBackground,
-                                                                                          fontSize: 13.0,
-                                                                                          letterSpacing: 0.0,
-                                                                                          fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
-                                                                                          fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                                        ),
+                                                                                              font: GoogleFonts.poppins(
+                                                                                                fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                                                fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                              ),
+                                                                                              color: FlutterFlowTheme.of(context).secondaryBackground,
+                                                                                              fontSize: 13.0,
+                                                                                              letterSpacing: 0.0,
+                                                                                              fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                                              fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                            ),
                                                                                       ),
                                                                                     ],
                                                                                   ),
@@ -1802,8 +2044,7 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
                                                                           ),
                                                                         ),
                                                                       ].divide(SizedBox(
-                                                                          height:
-                                                                          8.0)),
+                                                                              height: 8.0)),
                                                                     ),
                                                                   ),
                                                                 ),
@@ -1812,8 +2053,8 @@ class _PlaylistWidgetState extends State<PlaylistWidget>
                                                           ),
                                                           Divider(
                                                             thickness: 1.0,
-                                                            color:
-                                                            Color(0xFFD9D9D9),
+                                                            color: Color(
+                                                                0xFFD9D9D9),
                                                           ),
                                                         ].divide(SizedBox(
                                                             height: 8.0)),

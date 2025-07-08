@@ -52,7 +52,7 @@ class RepeatButtonNotifier extends ValueNotifier<RepeatState> {
 class PageManager {
   final currentSongNotifier = ValueNotifier<MediaItem?>(null);
   final playbackStatNotifier =
-  ValueNotifier<AudioProcessingState>(AudioProcessingState.idle);
+      ValueNotifier<AudioProcessingState>(AudioProcessingState.idle);
   final playlistNotifier = ValueNotifier<List<MediaItem>>([]);
   final progressNotifier = ProgressNotifier();
   final repeatButtonNotifier = RepeatButtonNotifier();
@@ -168,8 +168,8 @@ class PageManager {
     });
   }
 
-  void play() => audioHandler.play();
-  void pause() => audioHandler.pause();
+  Future<void> play() async => await audioHandler.play();
+  Future<void> pause() async => await audioHandler.pause();
   void seek(Duration position) => audioHandler.seek(position);
   void previous() => audioHandler.skipToPrevious();
   void next() => audioHandler.skipToNext();
@@ -281,11 +281,13 @@ class PageManager {
     audioHandler.addQueueItem(mediaItem);
   }
 
-  Future<void> adds(List<MediaItem> mediaItems, int index) async {
+  Future<void> adds(List<MediaItem> mediaItems, int index,
+      {bool autoplay = true}) async {
     if (mediaItems.isEmpty) {
       return;
     }
-    await (audioHandler as MyAudioHandler).setNewPlaylist(mediaItems, index);
+    await (audioHandler as MyAudioHandler)
+        .setNewPlaylist(mediaItems, index, autoplay: autoplay);
   }
 
   void remove() {

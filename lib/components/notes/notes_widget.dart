@@ -291,12 +291,22 @@ class _NotesWidgetState extends State<NotesWidget> {
                           width: double.infinity,
                           height: 52.0,
                           decoration: BoxDecoration(
-                            image: DecorationImage(
-                              fit: BoxFit.cover,
-                              image: Image.asset(
-                                'assets/images/Frame_1410149479g_1_(1)_(1).png',
-                              ).image,
+                            gradient: LinearGradient(
+                              colors: [
+                                Color(0xFFEFDBB6),
+                                Color(0xFFFAEDD6),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                             ),
+                            borderRadius: BorderRadius.circular(16.0),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Color(0xFFEFDBB6).withOpacity(0.4),
+                                blurRadius: 12.0,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
                           ),
                           child: Material(
                             color: Colors.transparent,
@@ -471,27 +481,39 @@ class _NotesWidgetState extends State<NotesWidget> {
                                         fit: BoxFit.cover,
                                         animate: true,
                                       )
-                                    : Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Icon(
-                                            Icons.save_rounded,
-                                            color: Color(0xFF232323),
-                                            size: 20.0,
+                                    : Container(
+                                        width: double.infinity,
+                                        height: 50.0,
+                                        decoration: BoxDecoration(
+                                          image: DecorationImage(
+                                            fit: BoxFit.cover,
+                                            image: Image.asset(
+                                              'assets/images/Frame_1410149479g_1_(1)_(1).png',
+                                            ).image,
                                           ),
-                                          SizedBox(width: 8.0),
-                                          Text(
-                                            FFLocalizations.of(context)
-                                                .getText('8yqmz2oh'),
-                                            style: GoogleFonts.poppins(
-                                              fontSize: 16.0,
-                                              fontWeight: FontWeight.w600,
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.save_rounded,
                                               color: Color(0xFF232323),
-                                              letterSpacing: 0.5,
+                                              size: 20.0,
                                             ),
-                                          ),
-                                        ],
+                                            SizedBox(width: 8.0),
+                                            Text(
+                                              FFLocalizations.of(context)
+                                                  .getText('8yqmz2oh'),
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 16.0,
+                                                fontWeight: FontWeight.w600,
+                                                color: Color(0xFF232323),
+                                                letterSpacing: 0.5,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                               ),
                             ),

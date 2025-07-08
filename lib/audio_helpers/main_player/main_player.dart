@@ -35,6 +35,7 @@ class _MainPlayerViewState extends State<MainPlayerView>
   bool showShloka = false;
   bool isDownloadingToLocal = false;
   final animationsMap = <String, AnimationInfo>{};
+  bool _isPlayPauseLoading = false;
 
   @override
   void initState() {
@@ -146,7 +147,7 @@ class _MainPlayerViewState extends State<MainPlayerView>
                     ),
                   );
                 }
-      
+
                 return Stack(children: [
                   Column(
                     children: [
@@ -176,7 +177,7 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                             .extras!['json'],
                                         r'''$.content_2''',
                                       );
-      
+
                                       return ClipRRect(
                                         borderRadius: BorderRadius.circular(16),
                                         child: showShloka
@@ -184,9 +185,12 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                                 ? Container(
                                                     width: media.width,
                                                     height: 300,
-                                                    padding: EdgeInsets.all(16.0),
-                                          color: Colors.white.withOpacity(0.5), // Optional: Set a background color
-                                                    child: SingleChildScrollView(
+                                                    padding:
+                                                        EdgeInsets.all(16.0),
+                                                    color: Colors.white.withOpacity(
+                                                        0.5), // Optional: Set a background color
+                                                    child:
+                                                        SingleChildScrollView(
                                                       child: Html(
                                                         data: functions
                                                             .cleanHtmlContent(
@@ -198,9 +202,10 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                                                 .primaryText,
                                                             fontSize:
                                                                 FontSize(14.0),
-                                                            fontFamily: 'Poppins',
-                                                            textAlign:
-                                                                TextAlign.center,
+                                                            fontFamily:
+                                                                'Poppins',
+                                                            textAlign: TextAlign
+                                                                .center,
                                                           ),
                                                           "h1": Style(
                                                             fontSize:
@@ -237,15 +242,17 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                                                 .primaryText,
                                                           ),
                                                           "p": Style(
-                                                            margin: Margins.only(
-                                                                bottom: 8),
+                                                            margin:
+                                                                Margins.only(
+                                                                    bottom: 8),
                                                             color: FlutterFlowTheme
                                                                     .of(context)
                                                                 .primaryText,
                                                           ),
                                                           "br": Style(
-                                                            margin: Margins.only(
-                                                                bottom: 4),
+                                                            margin:
+                                                                Margins.only(
+                                                                    bottom: 4),
                                                           ),
                                                         },
                                                         onLinkTap: (String? url,
@@ -254,11 +261,13 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                                             element) async {
                                                           if (url != null) {
                                                             final uri =
-                                                                Uri.tryParse(url);
+                                                                Uri.tryParse(
+                                                                    url);
                                                             if (uri != null &&
                                                                 await canLaunchUrl(
                                                                     uri)) {
-                                                              await launchUrl(uri,
+                                                              await launchUrl(
+                                                                  uri,
                                                                   mode: LaunchMode
                                                                       .externalApplication);
                                                             }
@@ -270,7 +279,8 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                                 : Container(
                                                     width: media.width,
                                                     height: 300,
-                                                    padding: EdgeInsets.all(16.0),
+                                                    padding:
+                                                        EdgeInsets.all(16.0),
                                                     color: Colors
                                                         .white, // Optional: Set a background color
                                                     child: Center(
@@ -301,9 +311,11 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                                     ? Container(
                                                         width: media.width,
                                                         height: 300,
-                                                        padding:
-                                                            EdgeInsets.all(16.0),
-                                          color: Colors.white.withOpacity(0.5), // Optional: Set a background color
+                                                        padding: EdgeInsets.all(
+                                                            16.0),
+                                                        color: Colors.white
+                                                            .withOpacity(
+                                                                0.5), // Optional: Set a background color
                                                         child:
                                                             SingleChildScrollView(
                                                           child: Html(
@@ -312,8 +324,8 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                                                     content),
                                                             style: {
                                                               "body": Style(
-                                                                color: FlutterFlowTheme
-                                                                        .of(context)
+                                                                color: FlutterFlowTheme.of(
+                                                                        context)
                                                                     .primaryText,
                                                                 fontSize:
                                                                     FontSize(
@@ -331,8 +343,8 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                                                 fontWeight:
                                                                     FontWeight
                                                                         .bold,
-                                                                color: FlutterFlowTheme
-                                                                        .of(context)
+                                                                color: FlutterFlowTheme.of(
+                                                                        context)
                                                                     .primaryText,
                                                               ),
                                                               "h2": Style(
@@ -342,8 +354,8 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                                                 fontWeight:
                                                                     FontWeight
                                                                         .bold,
-                                                                color: FlutterFlowTheme
-                                                                        .of(context)
+                                                                color: FlutterFlowTheme.of(
+                                                                        context)
                                                                     .primaryText,
                                                               ),
                                                               "h3": Style(
@@ -353,30 +365,30 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                                                 fontWeight:
                                                                     FontWeight
                                                                         .bold,
-                                                                color: FlutterFlowTheme
-                                                                        .of(context)
+                                                                color: FlutterFlowTheme.of(
+                                                                        context)
                                                                     .primaryText,
                                                               ),
                                                               "strong": Style(
                                                                 fontWeight:
                                                                     FontWeight
                                                                         .bold,
-                                                                color: FlutterFlowTheme
-                                                                        .of(context)
+                                                                color: FlutterFlowTheme.of(
+                                                                        context)
                                                                     .primaryText,
                                                               ),
                                                               "p": Style(
-                                                                margin:
-                                                                    Margins.only(
+                                                                margin: Margins
+                                                                    .only(
                                                                         bottom:
                                                                             8),
-                                                                color: FlutterFlowTheme
-                                                                        .of(context)
+                                                                color: FlutterFlowTheme.of(
+                                                                        context)
                                                                     .primaryText,
                                                               ),
                                                               "br": Style(
-                                                                margin:
-                                                                    Margins.only(
+                                                                margin: Margins
+                                                                    .only(
                                                                         bottom:
                                                                             4),
                                                               ),
@@ -387,8 +399,8 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                                     : Container(
                                                         width: media.width,
                                                         height: 300,
-                                                        padding:
-                                                            EdgeInsets.all(16.0),
+                                                        padding: EdgeInsets.all(
+                                                            16.0),
                                                         color: Colors
                                                             .white, // Optional: Set a background color
                                                         child: Center(
@@ -408,8 +420,8 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                                                       FontWeight
                                                                           .normal,
                                                                 ),
-                                                            textAlign:
-                                                                TextAlign.center,
+                                                            textAlign: TextAlign
+                                                                .center,
                                                           ),
                                                         ),
                                                       ))
@@ -424,7 +436,8 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                                         fit: BoxFit.cover,
                                                       );
                                                     },
-                                                    placeholder: (context, url) {
+                                                    placeholder:
+                                                        (context, url) {
                                                       return Image.asset(
                                                         "assets/images/app_launcher_icon.png",
                                                         fit: BoxFit.cover,
@@ -446,11 +459,12 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Padding(
-                                          padding: EdgeInsetsDirectional.fromSTEB(
-                                              0, 0, 12, 0),
+                                          padding:
+                                              EdgeInsetsDirectional.fromSTEB(
+                                                  0, 0, 12, 0),
                                           child: AutoSizeText(
-                                            pageManager
-                                                .currentSongNotifier.value!.title,
+                                            pageManager.currentSongNotifier
+                                                .value!.title,
                                             textAlign: TextAlign.start,
                                             maxLines: 1,
                                             minFontSize: 10,
@@ -501,7 +515,8 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                               ),
                                               maxLines: 1,
                                               minFontSize: 8,
-                                              style: FlutterFlowTheme.of(context)
+                                              style: FlutterFlowTheme.of(
+                                                      context)
                                                   .bodyLarge
                                                   .override(
                                                     fontFamily: 'Poppins',
@@ -514,14 +529,18 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                             ),
                                           ),
                                         if ((getJsonField(
-                                                  pageManager.currentSongNotifier
-                                                      .value!.extras!['json'],
+                                                  pageManager
+                                                      .currentSongNotifier
+                                                      .value!
+                                                      .extras!['json'],
                                                   r'''$.city''',
                                                 ) !=
                                                 null) &&
                                             (getJsonField(
-                                                  pageManager.currentSongNotifier
-                                                      .value!.extras!['json'],
+                                                  pageManager
+                                                      .currentSongNotifier
+                                                      .value!
+                                                      .extras!['json'],
                                                   r'''$.shloka_part''',
                                                 ) !=
                                                 null))
@@ -550,9 +569,9 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                                 .bodyMedium
                                                 .override(
                                                   fontFamily: 'Poppins',
-                                                  color:
-                                                      FlutterFlowTheme.of(context)
-                                                          .backGrey,
+                                                  color: FlutterFlowTheme.of(
+                                                          context)
+                                                      .backGrey,
                                                   fontSize: 16,
                                                   letterSpacing: 0.0,
                                                   fontWeight: FontWeight.w500,
@@ -584,8 +603,10 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                                 "yyyy",
                                                 functions
                                                     .stringToDate(getJsonField(
-                                                  pageManager.currentSongNotifier
-                                                      .value!.extras!['json'],
+                                                  pageManager
+                                                      .currentSongNotifier
+                                                      .value!
+                                                      .extras!['json'],
                                                   r'''$.date''',
                                                 ).toString()),
                                                 locale:
@@ -600,16 +621,18 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                                 .bodyMedium
                                                 .override(
                                                   fontFamily: 'Poppins',
-                                                  color:
-                                                      FlutterFlowTheme.of(context)
-                                                          .backGrey,
+                                                  color: FlutterFlowTheme.of(
+                                                          context)
+                                                      .backGrey,
                                                   fontSize: 16,
                                                   letterSpacing: 0.0,
                                                   fontWeight: FontWeight.w500,
                                                   lineHeight: 1.5,
                                                 ),
                                           ),
-                                        if (pageManager.currentSongNotifier.value!
+                                        if (pageManager
+                                                .currentSongNotifier
+                                                .value!
                                                 .extras!['json']['author'] !=
                                             null)
                                           SizedBox(
@@ -619,11 +642,15 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                               color: Color(0xFF7ECBC9),
                                             ),
                                           ),
-                                        if (pageManager.currentSongNotifier.value!
+                                        if (pageManager
+                                                .currentSongNotifier
+                                                .value!
                                                 .extras!['json']['author'] !=
                                             null)
                                           AutoSizeText(
-                                            pageManager.currentSongNotifier.value!
+                                            pageManager
+                                                .currentSongNotifier
+                                                .value!
                                                 .extras!['json']['author'],
                                             maxLines: 1,
                                             minFontSize: 8,
@@ -631,9 +658,9 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                                 .bodyMedium
                                                 .override(
                                                   fontFamily: 'Poppins',
-                                                  color:
-                                                      FlutterFlowTheme.of(context)
-                                                          .backGrey,
+                                                  color: FlutterFlowTheme.of(
+                                                          context)
+                                                      .backGrey,
                                                   fontSize: 16,
                                                   letterSpacing: 0.0,
                                                   fontWeight: FontWeight.w500,
@@ -670,7 +697,8 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                           onTap: () async {
                                             await showModalBottomSheet(
                                               isScrollControlled: true,
-                                              backgroundColor: Colors.transparent,
+                                              backgroundColor:
+                                                  Colors.transparent,
                                               enableDrag: false,
                                               context: context,
                                               builder: (context) {
@@ -680,8 +708,8 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                                         FocusScope.of(context)
                                                             .unfocus(),
                                                     child: Padding(
-                                                      padding:
-                                                          MediaQuery.viewInsetsOf(
+                                                      padding: MediaQuery
+                                                          .viewInsetsOf(
                                                               context),
                                                       child: NotesWidget(
                                                         post: pageManager
@@ -700,15 +728,18 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                             width: 28,
                                             height: 28,
                                             decoration: BoxDecoration(
-                                              color: FlutterFlowTheme.of(context)
-                                                  .secondaryBackground,
+                                              color:
+                                                  FlutterFlowTheme.of(context)
+                                                      .secondaryBackground,
                                               shape: BoxShape.circle,
                                             ),
-                                            alignment: AlignmentDirectional(0, 0),
+                                            alignment:
+                                                AlignmentDirectional(0, 0),
                                             child: Icon(
                                               Icons.edit_note_outlined,
-                                              color: FlutterFlowTheme.of(context)
-                                                  .primaryText,
+                                              color:
+                                                  FlutterFlowTheme.of(context)
+                                                      .primaryText,
                                               size: 21,
                                             ),
                                           ),
@@ -721,7 +752,8 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                           onTap: () async {
                                             await showModalBottomSheet(
                                               isScrollControlled: true,
-                                              backgroundColor: Colors.transparent,
+                                              backgroundColor:
+                                                  Colors.transparent,
                                               enableDrag: false,
                                               context: context,
                                               builder: (context) {
@@ -731,10 +763,11 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                                         FocusScope.of(context)
                                                             .unfocus(),
                                                     child: Padding(
-                                                      padding:
-                                                          MediaQuery.viewInsetsOf(
+                                                      padding: MediaQuery
+                                                          .viewInsetsOf(
                                                               context),
-                                                      child: SavetoPlaylistWidget(
+                                                      child:
+                                                          SavetoPlaylistWidget(
                                                         post: pageManager
                                                             .currentSongNotifier
                                                             .value!
@@ -751,15 +784,18 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                             width: 28,
                                             height: 28,
                                             decoration: BoxDecoration(
-                                              color: FlutterFlowTheme.of(context)
-                                                  .secondaryBackground,
+                                              color:
+                                                  FlutterFlowTheme.of(context)
+                                                      .secondaryBackground,
                                               shape: BoxShape.circle,
                                             ),
-                                            alignment: AlignmentDirectional(0, 0),
+                                            alignment:
+                                                AlignmentDirectional(0, 0),
                                             child: Icon(
                                               Icons.playlist_add,
-                                              color: FlutterFlowTheme.of(context)
-                                                  .primaryText,
+                                              color:
+                                                  FlutterFlowTheme.of(context)
+                                                      .primaryText,
                                               size: 18,
                                             ),
                                           ),
@@ -800,7 +836,8 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                               splashColor: Colors.transparent,
                                               focusColor: Colors.transparent,
                                               hoverColor: Colors.transparent,
-                                              highlightColor: Colors.transparent,
+                                              highlightColor:
+                                                  Colors.transparent,
                                               onTap: () async {
                                                 logFirebaseEvent(
                                                     'NOW_PLAYING_Container_g4regw2j_ON_TAP');
@@ -837,7 +874,8 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                                     SnackBar(
                                                       content: Text(
                                                           'Download failed: \\${e.toString()}'),
-                                                      backgroundColor: Colors.red,
+                                                      backgroundColor:
+                                                          Colors.red,
                                                     ),
                                                   );
                                                 } finally {
@@ -852,7 +890,8 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                                         .stop();
                                                   }
                                                   setState(() {
-                                                    isDownloadingToLocal = false;
+                                                    isDownloadingToLocal =
+                                                        false;
                                                   });
                                                 }
                                                 logFirebaseEvent(
@@ -862,9 +901,9 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                                 width: 28.0,
                                                 height: 28.0,
                                                 decoration: BoxDecoration(
-                                                  color:
-                                                      FlutterFlowTheme.of(context)
-                                                          .secondaryBackground,
+                                                  color: FlutterFlowTheme.of(
+                                                          context)
+                                                      .secondaryBackground,
                                                   shape: BoxShape.circle,
                                                 ),
                                                 alignment:
@@ -872,9 +911,9 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                                         0.0, 0.0),
                                                 child: Icon(
                                                   Icons.file_download_outlined,
-                                                  color:
-                                                      FlutterFlowTheme.of(context)
-                                                          .primaryText,
+                                                  color: FlutterFlowTheme.of(
+                                                          context)
+                                                      .primaryText,
                                                   size: 21.0,
                                                 ),
                                               ),
@@ -884,16 +923,19 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                             width: 28.0,
                                             height: 28.0,
                                             decoration: BoxDecoration(
-                                              color: FlutterFlowTheme.of(context)
-                                                  .secondaryBackground,
+                                              color:
+                                                  FlutterFlowTheme.of(context)
+                                                      .secondaryBackground,
                                               shape: BoxShape.circle,
                                             ),
-                                            alignment: const AlignmentDirectional(
-                                                0.0, 0.0),
+                                            alignment:
+                                                const AlignmentDirectional(
+                                                    0.0, 0.0),
                                             child: Icon(
                                               Icons.downloading,
-                                              color: FlutterFlowTheme.of(context)
-                                                  .primaryText,
+                                              color:
+                                                  FlutterFlowTheme.of(context)
+                                                      .primaryText,
                                               size: 21.0,
                                             ).animateOnActionTrigger(
                                               animationsMap[
@@ -906,7 +948,8 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                               splashColor: Colors.transparent,
                                               focusColor: Colors.transparent,
                                               hoverColor: Colors.transparent,
-                                              highlightColor: Colors.transparent,
+                                              highlightColor:
+                                                  Colors.transparent,
                                               onTap: () async {
                                                 logFirebaseEvent(
                                                     'NOW_PLAYING_Container_0zf1g3um_ON_TAP');
@@ -929,9 +972,9 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                                 width: 32.0,
                                                 height: 32.0,
                                                 decoration: BoxDecoration(
-                                                  color:
-                                                      FlutterFlowTheme.of(context)
-                                                          .secondaryBackground,
+                                                  color: FlutterFlowTheme.of(
+                                                          context)
+                                                      .secondaryBackground,
                                                   shape: BoxShape.circle,
                                                 ),
                                                 alignment:
@@ -939,9 +982,9 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                                         0.0, 0.0),
                                                 child: FaIcon(
                                                   FontAwesomeIcons.share,
-                                                  color:
-                                                      FlutterFlowTheme.of(context)
-                                                          .primaryText,
+                                                  color: FlutterFlowTheme.of(
+                                                          context)
+                                                      .primaryText,
                                                   size: 21.0,
                                                 ),
                                               ),
@@ -1022,8 +1065,9 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                             .bodyMedium
                                             .override(
                                               fontFamily: 'Poppins',
-                                              color: FlutterFlowTheme.of(context)
-                                                  .primaryText,
+                                              color:
+                                                  FlutterFlowTheme.of(context)
+                                                      .primaryText,
                                               letterSpacing: 0.0,
                                             ),
                                       ),
@@ -1050,8 +1094,9 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                             .bodyMedium
                                             .override(
                                               fontFamily: 'Poppins',
-                                              color: FlutterFlowTheme.of(context)
-                                                  .primaryText,
+                                              color:
+                                                  FlutterFlowTheme.of(context)
+                                                      .primaryText,
                                               letterSpacing: 0.0,
                                             ),
                                       ),
@@ -1076,8 +1121,9 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                             .bodyMedium
                                             .override(
                                               fontFamily: 'Poppins',
-                                              color: FlutterFlowTheme.of(context)
-                                                  .primaryText,
+                                              color:
+                                                  FlutterFlowTheme.of(context)
+                                                      .primaryText,
                                               letterSpacing: 0.0,
                                             ),
                                       ),
@@ -1141,20 +1187,21 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                           pageManager.progressNotifier,
                                       builder: (context, valueState, child) {
                                         bool dragging = false;
-      
+
                                         final value = min(
                                             valueState.current.inMilliseconds
                                                 .toDouble(),
                                             valueState.total.inMilliseconds
                                                 .toDouble());
-      
+
                                         return SliderTheme(
                                           data: const SliderThemeData(
                                             trackHeight: 2,
                                             thumbShape: RoundSliderThumbShape(
                                                 enabledThumbRadius: 8),
-                                            overlayShape: RoundSliderOverlayShape(
-                                                overlayRadius: 16),
+                                            overlayShape:
+                                                RoundSliderOverlayShape(
+                                                    overlayRadius: 16),
                                           ),
                                           child: Slider(
                                             value: value,
@@ -1165,7 +1212,8 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                                 100, 0, 0, 0),
                                             min: 0,
                                             max: max(
-                                                valueState.current.inMilliseconds
+                                                valueState
+                                                    .current.inMilliseconds
                                                     .toDouble(),
                                                 valueState.total.inMilliseconds
                                                     .toDouble()),
@@ -1173,7 +1221,7 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                               if (!dragging) {
                                                 dragging = true;
                                               }
-      
+
                                               pageManager.seek(
                                                 Duration(
                                                   milliseconds: newVal.round(),
@@ -1277,22 +1325,21 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                                         height: 65,
                                                         child:
                                                             CircularProgressIndicator(
-                                                          valueColor:
-                                                              AlwaysStoppedAnimation<
-                                                                      Color>(
-                                                                  FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .primaryText),
+                                                          valueColor: AlwaysStoppedAnimation<
+                                                                  Color>(
+                                                              FlutterFlowTheme.of(
+                                                                      context)
+                                                                  .primaryText),
                                                         ),
                                                       )
                                                     : Container(
                                                         width: 65,
                                                         height: 65,
-                                                        decoration: BoxDecoration(
-                                                          color:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .lightCoral,
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: FlutterFlowTheme
+                                                                  .of(context)
+                                                              .lightCoral,
                                                           borderRadius:
                                                               BorderRadius
                                                                   .circular(40),
@@ -1301,8 +1348,19 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                                                 ButtonState
                                                                     .playing
                                                             ? InkWell(
-                                                                onTap: pageManager
-                                                                    .pause,
+                                                                onTap:
+                                                                    () async {
+                                                                  if (_isPlayPauseLoading)
+                                                                    return;
+                                                                  setState(() =>
+                                                                      _isPlayPauseLoading =
+                                                                          true);
+                                                                  await pageManager
+                                                                      .pause();
+                                                                  setState(() =>
+                                                                      _isPlayPauseLoading =
+                                                                          false);
+                                                                },
                                                                 child: Icon(
                                                                   Icons
                                                                       .pause_rounded,
@@ -1313,8 +1371,19 @@ class _MainPlayerViewState extends State<MainPlayerView>
                                                                 ),
                                                               )
                                                             : InkWell(
-                                                                onTap: pageManager
-                                                                    .play,
+                                                                onTap:
+                                                                    () async {
+                                                                  if (_isPlayPauseLoading)
+                                                                    return;
+                                                                  setState(() =>
+                                                                      _isPlayPauseLoading =
+                                                                          true);
+                                                                  await pageManager
+                                                                      .play();
+                                                                  setState(() =>
+                                                                      _isPlayPauseLoading =
+                                                                          false);
+                                                                },
                                                                 child: Icon(
                                                                   Icons
                                                                       .play_arrow_rounded,

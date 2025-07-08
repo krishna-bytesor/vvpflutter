@@ -1,5 +1,8 @@
 ﻿import 'package:v_v_p_swami/audio_helpers/main_player/main_player.dart';
 import 'package:v_v_p_swami/audio_helpers/player_invoke.dart';
+import 'package:v_v_p_swami/audio_helpers/mediaitem_converter.dart';
+import 'package:v_v_p_swami/audio_helpers/audio_handler.dart';
+import 'package:audio_service/audio_service.dart';
 
 import '/backend/api_requests/api_calls.dart';
 import '/components/bottom_nav_bar/bottom_nav_bar_widget.dart';
@@ -21,6 +24,10 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:webviewx_plus/webviewx_plus.dart';
 import 'favorite_list_model.dart';
+import 'package:get_it/get_it.dart';
+import 'package:v_v_p_swami/audio_helpers/page_manager.dart';
+import 'package:v_v_p_swami/audio_helpers/mediaitem_converter.dart'
+    show getYouTubeAudioStreamUrl;
 export 'favorite_list_model.dart';
 
 class FavoriteListWidget extends StatefulWidget {
@@ -60,6 +67,15 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
     super.dispose();
   }
 
+  Future<String> getPlayableUrl(dynamic url) async {
+    final urlStr = url.toString();
+    if (urlStr.contains('youtube.com') || urlStr.contains('youtu.be')) {
+      final ytAudioUrl = await getYouTubeAudioStreamUrl(urlStr);
+      return ytAudioUrl ?? urlStr;
+    }
+    return urlStr;
+  }
+
   @override
   Widget build(BuildContext context) {
     context.watch<FFAppState>();
@@ -87,7 +103,7 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
             );
           }
           final favoriteListLikedPostsListResponse = snapshot.data!;
-      
+
           return GestureDetector(
             onTap: () {
               FocusScope.of(context).unfocus();
@@ -112,7 +128,7 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                 ),
                 child: Padding(
                   padding:
-                  const EdgeInsetsDirectional.fromSTEB(0.0, 40.0, 0.0, 0.0),
+                      const EdgeInsetsDirectional.fromSTEB(0.0, 40.0, 0.0, 0.0),
                   child: Column(
                     mainAxisSize: MainAxisSize.max,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -141,21 +157,22 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                             ),
                             textAlign: TextAlign.center,
                             minFontSize: 12.0,
-                            style:
-                            FlutterFlowTheme.of(context).bodyMedium.override(
-                              font: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w600,
-                                fontStyle: FlutterFlowTheme.of(context)
-                                    .bodyMedium
-                                    .fontStyle,
-                              ),
-                              fontSize: 20.0,
-                              letterSpacing: 0.0,
-                              fontWeight: FontWeight.w600,
-                              fontStyle: FlutterFlowTheme.of(context)
-                                  .bodyMedium
-                                  .fontStyle,
-                            ),
+                            style: FlutterFlowTheme.of(context)
+                                .bodyMedium
+                                .override(
+                                  font: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.w600,
+                                    fontStyle: FlutterFlowTheme.of(context)
+                                        .bodyMedium
+                                        .fontStyle,
+                                  ),
+                                  fontSize: 20.0,
+                                  letterSpacing: 0.0,
+                                  fontWeight: FontWeight.w600,
+                                  fontStyle: FlutterFlowTheme.of(context)
+                                      .bodyMedium
+                                      .fontStyle,
+                                ),
                           ),
                           Container(
                             width: 60.0,
@@ -172,31 +189,33 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                 child: TabBar(
                                   isScrollable: true,
                                   labelColor:
-                                  FlutterFlowTheme.of(context).primaryText,
+                                      FlutterFlowTheme.of(context).primaryText,
                                   unselectedLabelColor: Color(0xFF436073),
                                   labelStyle: FlutterFlowTheme.of(context)
                                       .titleMedium
                                       .override(
-                                    font: GoogleFonts.poppins(
-                                      fontWeight: FlutterFlowTheme.of(context)
-                                          .titleMedium
-                                          .fontWeight,
-                                      fontStyle: FlutterFlowTheme.of(context)
-                                          .titleMedium
-                                          .fontStyle,
-                                    ),
-                                    fontSize: 14.0,
-                                    letterSpacing: 0.0,
-                                    fontWeight: FlutterFlowTheme.of(context)
-                                        .titleMedium
-                                        .fontWeight,
-                                    fontStyle: FlutterFlowTheme.of(context)
-                                        .titleMedium
-                                        .fontStyle,
-                                  ),
+                                        font: GoogleFonts.poppins(
+                                          fontWeight:
+                                              FlutterFlowTheme.of(context)
+                                                  .titleMedium
+                                                  .fontWeight,
+                                          fontStyle:
+                                              FlutterFlowTheme.of(context)
+                                                  .titleMedium
+                                                  .fontStyle,
+                                        ),
+                                        fontSize: 14.0,
+                                        letterSpacing: 0.0,
+                                        fontWeight: FlutterFlowTheme.of(context)
+                                            .titleMedium
+                                            .fontWeight,
+                                        fontStyle: FlutterFlowTheme.of(context)
+                                            .titleMedium
+                                            .fontStyle,
+                                      ),
                                   unselectedLabelStyle: TextStyle(),
                                   indicatorColor:
-                                  FlutterFlowTheme.of(context).primaryText,
+                                      FlutterFlowTheme.of(context).primaryText,
                                   padding: EdgeInsets.all(4.0),
                                   tabs: [
                                     Tab(
@@ -223,10 +242,10 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                   controller: _model.tabBarController,
                                   onTap: (i) async {
                                     [
-                                          () async {},
-                                          () async {},
-                                          () async {},
-                                          () async {}
+                                      () async {},
+                                      () async {},
+                                      () async {},
+                                      () async {}
                                     ][i]();
                                   },
                                 ),
@@ -238,266 +257,264 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                     Builder(
                                       builder: (context) {
                                         final audioList = LaravelGroup
-                                            .likedPostsListCall
-                                            .dataList(
-                                          favoriteListLikedPostsListResponse
-                                              .jsonBody,
-                                        )
-                                            ?.where((e) =>
-                                        functions.jsonToint(
-                                            e, 'post_type_id') ==
-                                            1)
-                                            .toList()
-                                            .toList() ??
+                                                .likedPostsListCall
+                                                .dataList(
+                                                  favoriteListLikedPostsListResponse
+                                                      .jsonBody,
+                                                )
+                                                ?.where((e) =>
+                                                    functions.jsonToint(
+                                                        e, 'post_type_id') ==
+                                                    1)
+                                                .toList()
+                                                .toList() ??
                                             [];
                                         if (audioList.isEmpty) {
                                           return EmptyWidget();
                                         }
-      
+
                                         return ListView.separated(
                                           padding: EdgeInsets.zero,
                                           scrollDirection: Axis.vertical,
                                           itemCount: audioList.length,
                                           separatorBuilder: (_, __) =>
                                               SizedBox(height: 8.0),
-                                          itemBuilder: (context, audioListIndex) {
+                                          itemBuilder:
+                                              (context, audioListIndex) {
                                             final audioListItem =
-                                            audioList[audioListIndex];
+                                                audioList[audioListIndex];
                                             return Padding(
-                                              padding: const EdgeInsetsDirectional
-                                                  .fromSTEB(20.0, 8.0, 20.0, 0.0),
+                                              padding:
+                                                  const EdgeInsetsDirectional
+                                                      .fromSTEB(
+                                                      20.0, 8.0, 20.0, 0.0),
                                               child: Container(
                                                 decoration: BoxDecoration(
                                                   borderRadius:
-                                                  BorderRadius.circular(14.0),
+                                                      BorderRadius.circular(
+                                                          14.0),
                                                 ),
                                                 child: Column(
-                                                  mainAxisSize: MainAxisSize.max,
+                                                  mainAxisSize:
+                                                      MainAxisSize.max,
                                                   children: [
                                                     InkWell(
                                                       splashColor:
-                                                      Colors.transparent,
+                                                          Colors.transparent,
                                                       focusColor:
-                                                      Colors.transparent,
+                                                          Colors.transparent,
                                                       hoverColor:
-                                                      Colors.transparent,
+                                                          Colors.transparent,
                                                       highlightColor:
-                                                      Colors.transparent,
+                                                          Colors.transparent,
                                                       onTap: () async {
-                                                        logFirebaseEvent(
-                                                            'FAVORITE_LIST_PAGE_Row_sj9i67pp_ON_TAP');
-                                                        logFirebaseEvent(
-                                                            'Row_update_app_state');
-                                                        FFAppState().audioUrl =
-                                                            getJsonField(
-                                                              audioListItem,
-                                                              r'''$.data''',
-                                                            ).toString();
-                                                        FFAppState()
-                                                            .currentAudioTrack =
-                                                            audioListItem;
-                                                        FFAppState()
-                                                            .AudioPlayerSongIndex =
-                                                            audioListIndex;
-                                                        FFAppState()
-                                                            .AudioPlayerList =
-                                                            LaravelGroup
-                                                                .likedPostsListCall
-                                                                .dataList(
-                                                              favoriteListLikedPostsListResponse
-                                                                  .jsonBody,
-                                                            )!
-                                                                .where((e) =>
-                                                            functions
-                                                                .jsonToint(
-                                                                e,
-                                                                'post_type_id') ==
-                                                                1)
-                                                                .toList()
-                                                                .cast<dynamic>();
-                                                        safeSetState(() {});
-                                                        logFirebaseEvent(
-                                                            'Row_navigate_to');
-      
-                                                        playerPlayProcessDebounce(
-                                                          audioList
-                                                              .map((sObj) => {
-                                                            'id': sObj[
-                                                            "id"]
-                                                                .toString(),
-                                                            'title': sObj[
-                                                            "title"]
-                                                                .toString(),
-                                                            'artist': sObj[
-                                                            "author"]
-                                                                .toString(),
-                                                            'album': sObj[
-                                                            "album"]
-                                                                .toString(),
-                                                            'genre': sObj[
-                                                            "language"]
-                                                                .toString(),
-                                                            'image': sObj[
-                                                            "image"]
-                                                                .toString(),
-                                                            'url': sObj[
-                                                            "data"]
-                                                                .toString(),
-                                                            'user_id': sObj[
-                                                            "artistsId"]
-                                                                .toString(),
-                                                            'user_name': sObj[
-                                                            "artists"]
-                                                                .toString(),
-                                                            'extra': {
-                                                              'json':
-                                                              sObj,
-                                                              'date': sObj[
-                                                              "date"]
-                                                                  .toString(),
-                                                              'country': sObj[
-                                                              "country"]
-                                                                  .toString(),
-                                                              'city': sObj[
-                                                              "city"]
-                                                                  .toString(),
-                                                            },
-                                                          })
-                                                              .toList(),
-                                                          audioListIndex,
-                                                        );
-                                                        Navigator.push(
-                                                          context,
+                                                        // Open MainPlayerView immediately as a modal overlay
+                                                        Navigator.of(context,
+                                                                rootNavigator:
+                                                                    true)
+                                                            .push(
                                                           PageRouteBuilder(
                                                             opaque: false,
-                                                            pageBuilder: (_, ___,
-                                                                __) =>
-                                                            const MainPlayerView(),
+                                                            pageBuilder: (_, __,
+                                                                    ___) =>
+                                                                const MainPlayerView(),
                                                           ),
                                                         );
-                                                        // context.pushNamed(
-                                                        //   'NowPlayingPage',
-                                                        //   queryParameters: {
-                                                        //     'currentAudio':
-                                                        //         serializeParam(
-                                                        //       audioListItem,
-                                                        //       ParamType.JSON,
-                                                        //     ),
-                                                        //     'chapters':
-                                                        //         serializeParam(
-                                                        //       LaravelGroup
-                                                        //           .likedPostsListCall
-                                                        //           .dataList(
-                                                        //             favoriteListLikedPostsListResponse
-                                                        //                 .jsonBody,
-                                                        //           )
-                                                        //           ?.where((e) =>
-                                                        //               functions
-                                                        //                   .jsonToint(
-                                                        //                       e,
-                                                        //                       'post_type_id') ==
-                                                        //               1)
-                                                        //           .toList(),
-                                                        //       ParamType.JSON,
-                                                        //       isList: true,
-                                                        //     ),
-                                                        //     'currentAudioIndex':
-                                                        //         serializeParam(
-                                                        //       audioListIndex,
-                                                        //       ParamType.int,
-                                                        //     ),
-                                                        //   }.withoutNulls,
-                                                        // );
+                                                        final pageManager =
+                                                            GetIt.I<
+                                                                PageManager>();
+                                                        // Immediately show loading spinner in MainPlayer and MiniPlayer
+                                                        pageManager
+                                                            .setLoadingNewAudio(
+                                                                true);
+                                                        pageManager
+                                                                .playButtonNotifier
+                                                                .value =
+                                                            ButtonState.loading;
+                                                        pageManager
+                                                            .currentSongNotifier
+                                                            .value = null;
+                                                        // Immediately stop any currently playing audio
+                                                        await pageManager
+                                                            .audioHandler
+                                                            .stop();
+                                                        // Fetch all URLs in parallel
+                                                        final urls = await Future.wait(
+                                                            audioList.map((item) =>
+                                                                getPlayableUrl(
+                                                                    getJsonField(
+                                                                        item,
+                                                                        r'$.data'))));
+                                                        final playlist =
+                                                            <MediaItem>[];
+                                                        for (int i = 0;
+                                                            i <
+                                                                audioList
+                                                                    .length;
+                                                            i++) {
+                                                          final item =
+                                                              audioList[i];
+                                                          final url = urls[i];
+                                                          final itemMap = {
+                                                            'id': getJsonField(
+                                                                item, r'$.id'),
+                                                            'album':
+                                                                getJsonField(
+                                                                    item,
+                                                                    r'$.album'),
+                                                            'artist':
+                                                                getJsonField(
+                                                                    item,
+                                                                    r'$.author'),
+                                                            'duration':
+                                                                getJsonField(
+                                                                        item,
+                                                                        r'$.duration') ??
+                                                                    180,
+                                                            'title':
+                                                                getJsonField(
+                                                                    item,
+                                                                    r'$.title'),
+                                                            'image':
+                                                                getJsonField(
+                                                                    item,
+                                                                    r'$.image'),
+                                                            'language':
+                                                                getJsonField(
+                                                                    item,
+                                                                    r'$.language'),
+                                                            'url': url,
+                                                            'user_id': getJsonField(
+                                                                item,
+                                                                r'$.artistsId'),
+                                                            'user_name':
+                                                                getJsonField(
+                                                                    item,
+                                                                    r'$.artists'),
+                                                            'album_id':
+                                                                getJsonField(
+                                                                    item,
+                                                                    r'$.album_id'),
+                                                            'extra': {
+                                                              'json': item,
+                                                              'date':
+                                                                  getJsonField(
+                                                                      item,
+                                                                      r'$.date'),
+                                                              'country':
+                                                                  getJsonField(
+                                                                      item,
+                                                                      r'$.country'),
+                                                              'city':
+                                                                  getJsonField(
+                                                                      item,
+                                                                      r'$.city'),
+                                                            },
+                                                          };
+                                                          playlist.add(
+                                                              await MediaItemConverter
+                                                                  .mapToMediaItem(
+                                                                      itemMap));
+                                                        }
+                                                        await (pageManager
+                                                                    .audioHandler
+                                                                as MyAudioHandler)
+                                                            .setNewPlaylist(
+                                                                playlist,
+                                                                audioListIndex);
                                                       },
                                                       child: Row(
                                                         mainAxisSize:
-                                                        MainAxisSize.max,
+                                                            MainAxisSize.max,
                                                         children: [
                                                           if (getJsonField(
-                                                            audioListItem,
-                                                            r'''$.image''',
-                                                          ) !=
+                                                                audioListItem,
+                                                                r'''$.image''',
+                                                              ) !=
                                                               null)
                                                             ClipRRect(
                                                               borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                                  8.0),
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          8.0),
                                                               child:
-                                                              Image.network(
+                                                                  Image.network(
                                                                 getJsonField(
                                                                   audioListItem,
                                                                   r'''$.image''',
                                                                 ).toString(),
                                                                 width: 104.0,
                                                                 height: 104.0,
-                                                                fit: BoxFit.cover,
+                                                                fit: BoxFit
+                                                                    .cover,
                                                                 errorBuilder: (context,
-                                                                    error,
-                                                                    stackTrace) =>
+                                                                        error,
+                                                                        stackTrace) =>
                                                                     Image.asset(
-                                                                      'assets/images/error_image.png',
-                                                                      width: 104.0,
-                                                                      height: 104.0,
-                                                                      fit: BoxFit
-                                                                          .cover,
-                                                                    ),
+                                                                  'assets/images/error_image.png',
+                                                                  width: 104.0,
+                                                                  height: 104.0,
+                                                                  fit: BoxFit
+                                                                      .cover,
+                                                                ),
                                                               ),
                                                             ),
                                                           if (getJsonField(
-                                                            audioListItem,
-                                                            r'''$.image''',
-                                                          ) ==
+                                                                audioListItem,
+                                                                r'''$.image''',
+                                                              ) ==
                                                               null)
                                                             ClipRRect(
                                                               borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                                  8.0),
-                                                              child: Image.asset(
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          8.0),
+                                                              child:
+                                                                  Image.asset(
                                                                 'assets/images/AboutImage.png',
                                                                 width: 104.0,
                                                                 height: 104.0,
-                                                                fit: BoxFit.cover,
+                                                                fit: BoxFit
+                                                                    .cover,
                                                                 alignment:
-                                                                Alignment(
-                                                                    -1.0,
-                                                                    0.0),
+                                                                    Alignment(
+                                                                        -1.0,
+                                                                        0.0),
                                                               ),
                                                             ),
                                                           Flexible(
                                                             child: Padding(
                                                               padding:
-                                                              EdgeInsetsDirectional
-                                                                  .fromSTEB(
-                                                                  16.0,
-                                                                  0.0,
-                                                                  16.0,
-                                                                  0.0),
+                                                                  EdgeInsetsDirectional
+                                                                      .fromSTEB(
+                                                                          16.0,
+                                                                          0.0,
+                                                                          16.0,
+                                                                          0.0),
                                                               child: Column(
                                                                 mainAxisSize:
-                                                                MainAxisSize
-                                                                    .max,
+                                                                    MainAxisSize
+                                                                        .max,
                                                                 mainAxisAlignment:
-                                                                MainAxisAlignment
-                                                                    .spaceBetween,
+                                                                    MainAxisAlignment
+                                                                        .spaceBetween,
                                                                 crossAxisAlignment:
-                                                                CrossAxisAlignment
-                                                                    .start,
+                                                                    CrossAxisAlignment
+                                                                        .start,
                                                                 children: [
                                                                   SingleChildScrollView(
                                                                     scrollDirection:
-                                                                    Axis.horizontal,
+                                                                        Axis.horizontal,
                                                                     child: Row(
                                                                       mainAxisSize:
-                                                                      MainAxisSize
-                                                                          .max,
+                                                                          MainAxisSize
+                                                                              .max,
                                                                       mainAxisAlignment:
-                                                                      MainAxisAlignment
-                                                                          .spaceBetween,
+                                                                          MainAxisAlignment
+                                                                              .spaceBetween,
                                                                       crossAxisAlignment:
-                                                                      CrossAxisAlignment
-                                                                          .start,
+                                                                          CrossAxisAlignment
+                                                                              .start,
                                                                       children: [
                                                                         Text(
                                                                           getJsonField(
@@ -507,36 +524,36 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                                                           style: FlutterFlowTheme.of(context)
                                                                               .bodyMedium
                                                                               .override(
-                                                                            font: GoogleFonts.poppins(
-                                                                              fontWeight: FontWeight.w500,
-                                                                              fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                            ),
-                                                                            color: Color(0xFF232323),
-                                                                            fontSize: 16.0,
-                                                                            letterSpacing: 0.0,
-                                                                            fontWeight: FontWeight.w500,
-                                                                            fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                          ),
+                                                                                font: GoogleFonts.poppins(
+                                                                                  fontWeight: FontWeight.w500,
+                                                                                  fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                ),
+                                                                                color: Color(0xFF232323),
+                                                                                fontSize: 16.0,
+                                                                                letterSpacing: 0.0,
+                                                                                fontWeight: FontWeight.w500,
+                                                                                fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                              ),
                                                                         ),
                                                                       ],
                                                                     ),
                                                                   ),
                                                                   Row(
                                                                     mainAxisSize:
-                                                                    MainAxisSize
-                                                                        .max,
+                                                                        MainAxisSize
+                                                                            .max,
                                                                     mainAxisAlignment:
-                                                                    MainAxisAlignment
-                                                                        .start,
+                                                                        MainAxisAlignment
+                                                                            .start,
                                                                     children: [
                                                                       if (getJsonField(
-                                                                        audioListItem,
-                                                                        r'''$.shloka_part''',
-                                                                      ) !=
+                                                                            audioListItem,
+                                                                            r'''$.shloka_part''',
+                                                                          ) !=
                                                                           null)
                                                                         Flexible(
                                                                           child:
-                                                                          Text(
+                                                                              Text(
                                                                             functions.combineTextFromJson(
                                                                                 getJsonField(
                                                                                   audioListItem,
@@ -546,42 +563,40 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                                                                   audioListItem,
                                                                                   r'''$.shloka_chapter''',
                                                                                 ).toString()),
-                                                                            style: FlutterFlowTheme.of(context)
-                                                                                .bodyMedium
-                                                                                .override(
-                                                                              font: GoogleFonts.poppins(
-                                                                                fontWeight: FontWeight.w500,
-                                                                                fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                              ),
-                                                                              color: FlutterFlowTheme.of(context).backGrey,
-                                                                              fontSize: 13.0,
-                                                                              letterSpacing: 0.0,
-                                                                              fontWeight: FontWeight.w500,
-                                                                              fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                              lineHeight: 1.5,
-                                                                            ),
+                                                                            style: FlutterFlowTheme.of(context).bodyMedium.override(
+                                                                                  font: GoogleFonts.poppins(
+                                                                                    fontWeight: FontWeight.w500,
+                                                                                    fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                  ),
+                                                                                  color: FlutterFlowTheme.of(context).backGrey,
+                                                                                  fontSize: 13.0,
+                                                                                  letterSpacing: 0.0,
+                                                                                  fontWeight: FontWeight.w500,
+                                                                                  fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                  lineHeight: 1.5,
+                                                                                ),
                                                                           ),
                                                                         ),
                                                                       if (getJsonField(
-                                                                        audioListItem,
-                                                                        r'''$.shloka_part''',
-                                                                      ) !=
+                                                                            audioListItem,
+                                                                            r'''$.shloka_part''',
+                                                                          ) !=
                                                                           null)
                                                                         SizedBox(
                                                                           height:
-                                                                          16.0,
+                                                                              16.0,
                                                                           child:
-                                                                          VerticalDivider(
+                                                                              VerticalDivider(
                                                                             thickness:
-                                                                            1.0,
+                                                                                1.0,
                                                                             color:
-                                                                            Color(0xFF7ECBC9),
+                                                                                Color(0xFF7ECBC9),
                                                                           ),
                                                                         ),
                                                                       if (getJsonField(
-                                                                        audioListItem,
-                                                                        r'''$.city''',
-                                                                      ) !=
+                                                                            audioListItem,
+                                                                            r'''$.city''',
+                                                                          ) !=
                                                                           null)
                                                                         Text(
                                                                           getJsonField(
@@ -591,43 +606,43 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                                                           style: FlutterFlowTheme.of(context)
                                                                               .bodyMedium
                                                                               .override(
-                                                                            font: GoogleFonts.poppins(
-                                                                              fontWeight: FontWeight.w500,
-                                                                              fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                            ),
-                                                                            color: FlutterFlowTheme.of(context).backGrey,
-                                                                            fontSize: 13.0,
-                                                                            letterSpacing: 0.0,
-                                                                            fontWeight: FontWeight.w500,
-                                                                            fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                            lineHeight: 1.5,
-                                                                          ),
+                                                                                font: GoogleFonts.poppins(
+                                                                                  fontWeight: FontWeight.w500,
+                                                                                  fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                ),
+                                                                                color: FlutterFlowTheme.of(context).backGrey,
+                                                                                fontSize: 13.0,
+                                                                                letterSpacing: 0.0,
+                                                                                fontWeight: FontWeight.w500,
+                                                                                fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                lineHeight: 1.5,
+                                                                              ),
                                                                         ),
                                                                       if ((getJsonField(
-                                                                        audioListItem,
-                                                                        r'''$.city''',
-                                                                      ) !=
-                                                                          null) &&
+                                                                                audioListItem,
+                                                                                r'''$.city''',
+                                                                              ) !=
+                                                                              null) &&
                                                                           (getJsonField(
-                                                                            audioListItem,
-                                                                            r'''$.date''',
-                                                                          ) !=
+                                                                                audioListItem,
+                                                                                r'''$.date''',
+                                                                              ) !=
                                                                               null))
                                                                         SizedBox(
                                                                           height:
-                                                                          16.0,
+                                                                              16.0,
                                                                           child:
-                                                                          VerticalDivider(
+                                                                              VerticalDivider(
                                                                             thickness:
-                                                                            1.0,
+                                                                                1.0,
                                                                             color:
-                                                                            Color(0xFF7ECBC9),
+                                                                                Color(0xFF7ECBC9),
                                                                           ),
                                                                         ),
                                                                       if (getJsonField(
-                                                                        audioListItem,
-                                                                        r'''$.date''',
-                                                                      ) !=
+                                                                            audioListItem,
+                                                                            r'''$.date''',
+                                                                          ) !=
                                                                           null)
                                                                         Text(
                                                                           valueOrDefault<
@@ -638,31 +653,29 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                                                                 audioListItem,
                                                                                 r'''$.date''',
                                                                               ).toString()),
-                                                                              locale:
-                                                                              FFLocalizations.of(context).languageCode,
+                                                                              locale: FFLocalizations.of(context).languageCode,
                                                                             ),
                                                                             '-',
                                                                           ),
                                                                           style: FlutterFlowTheme.of(context)
                                                                               .bodyMedium
                                                                               .override(
-                                                                            font: GoogleFonts.poppins(
-                                                                              fontWeight: FontWeight.w500,
-                                                                              fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                            ),
-                                                                            color: FlutterFlowTheme.of(context).backGrey,
-                                                                            fontSize: 13.0,
-                                                                            letterSpacing: 0.0,
-                                                                            fontWeight: FontWeight.w500,
-                                                                            fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                            lineHeight: 1.5,
-                                                                          ),
+                                                                                font: GoogleFonts.poppins(
+                                                                                  fontWeight: FontWeight.w500,
+                                                                                  fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                ),
+                                                                                color: FlutterFlowTheme.of(context).backGrey,
+                                                                                fontSize: 13.0,
+                                                                                letterSpacing: 0.0,
+                                                                                fontWeight: FontWeight.w500,
+                                                                                fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                lineHeight: 1.5,
+                                                                              ),
                                                                         ),
                                                                     ],
                                                                   ),
                                                                   Padding(
-                                                                    padding:
-                                                                    const EdgeInsetsDirectional
+                                                                    padding: const EdgeInsetsDirectional
                                                                         .fromSTEB(
                                                                         0.0,
                                                                         8.0,
@@ -670,37 +683,35 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                                                         0.0),
                                                                     child: Row(
                                                                       mainAxisSize:
-                                                                      MainAxisSize
-                                                                          .max,
+                                                                          MainAxisSize
+                                                                              .max,
                                                                       mainAxisAlignment:
-                                                                      MainAxisAlignment
-                                                                          .spaceBetween,
+                                                                          MainAxisAlignment
+                                                                              .spaceBetween,
                                                                       children: [
                                                                         Container(
                                                                           decoration:
-                                                                          BoxDecoration(
+                                                                              BoxDecoration(
                                                                             color:
-                                                                            FlutterFlowTheme.of(context).primaryText,
+                                                                                FlutterFlowTheme.of(context).primaryText,
                                                                             borderRadius:
-                                                                            BorderRadius.circular(20.0),
+                                                                                BorderRadius.circular(20.0),
                                                                             shape:
-                                                                            BoxShape.rectangle,
+                                                                                BoxShape.rectangle,
                                                                           ),
                                                                           alignment: AlignmentDirectional(
                                                                               0.0,
                                                                               0.0),
                                                                           child:
-                                                                          Padding(
-                                                                            padding: const EdgeInsetsDirectional
-                                                                                .fromSTEB(
+                                                                              Padding(
+                                                                            padding: const EdgeInsetsDirectional.fromSTEB(
                                                                                 6.0,
                                                                                 3.0,
                                                                                 12.0,
                                                                                 3.0),
                                                                             child:
-                                                                            Row(
-                                                                              mainAxisSize:
-                                                                              MainAxisSize.max,
+                                                                                Row(
+                                                                              mainAxisSize: MainAxisSize.max,
                                                                               children: [
                                                                                 Icon(
                                                                                   Icons.play_arrow,
@@ -712,16 +723,16 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                                                                     'oklvzehp' /* Play */,
                                                                                   ),
                                                                                   style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                                                                    font: GoogleFonts.poppins(
-                                                                                      fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
-                                                                                      fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                                    ),
-                                                                                    color: FlutterFlowTheme.of(context).secondaryBackground,
-                                                                                    fontSize: 13.0,
-                                                                                    letterSpacing: 0.0,
-                                                                                    fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
-                                                                                    fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                                  ),
+                                                                                        font: GoogleFonts.poppins(
+                                                                                          fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                                          fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                        ),
+                                                                                        color: FlutterFlowTheme.of(context).secondaryBackground,
+                                                                                        fontSize: 13.0,
+                                                                                        letterSpacing: 0.0,
+                                                                                        fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                                        fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                      ),
                                                                                 ),
                                                                               ],
                                                                             ),
@@ -729,28 +740,21 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                                                         ),
                                                                         Row(
                                                                           mainAxisSize:
-                                                                          MainAxisSize.max,
+                                                                              MainAxisSize.max,
                                                                           mainAxisAlignment:
-                                                                          MainAxisAlignment.end,
+                                                                              MainAxisAlignment.end,
                                                                           children:
-                                                                          [
+                                                                              [
                                                                             LikeUnlikeWidget(
-                                                                              key:
-                                                                              Key('Keygz7_${audioListIndex}_of_${audioList.length}'),
-                                                                              post:
-                                                                              audioListItem,
+                                                                              key: Key('Keygz7_${audioListIndex}_of_${audioList.length}'),
+                                                                              post: audioListItem,
                                                                             ),
                                                                             InkWell(
-                                                                              splashColor:
-                                                                              Colors.transparent,
-                                                                              focusColor:
-                                                                              Colors.transparent,
-                                                                              hoverColor:
-                                                                              Colors.transparent,
-                                                                              highlightColor:
-                                                                              Colors.transparent,
-                                                                              onTap:
-                                                                                  () async {
+                                                                              splashColor: Colors.transparent,
+                                                                              focusColor: Colors.transparent,
+                                                                              hoverColor: Colors.transparent,
+                                                                              highlightColor: Colors.transparent,
+                                                                              onTap: () async {
                                                                                 logFirebaseEvent('FAVORITE_LIST_Container_wq1d948h_ON_TAP');
                                                                                 logFirebaseEvent('Container_bottom_sheet');
                                                                                 await showModalBottomSheet(
@@ -776,8 +780,7 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                                                                   },
                                                                                 ).then((value) => safeSetState(() {}));
                                                                               },
-                                                                              child:
-                                                                              Container(
+                                                                              child: Container(
                                                                                 width: 28.0,
                                                                                 height: 28.0,
                                                                                 decoration: BoxDecoration(
@@ -793,16 +796,11 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                                                               ),
                                                                             ),
                                                                             InkWell(
-                                                                              splashColor:
-                                                                              Colors.transparent,
-                                                                              focusColor:
-                                                                              Colors.transparent,
-                                                                              hoverColor:
-                                                                              Colors.transparent,
-                                                                              highlightColor:
-                                                                              Colors.transparent,
-                                                                              onTap:
-                                                                                  () async {
+                                                                              splashColor: Colors.transparent,
+                                                                              focusColor: Colors.transparent,
+                                                                              hoverColor: Colors.transparent,
+                                                                              highlightColor: Colors.transparent,
+                                                                              onTap: () async {
                                                                                 logFirebaseEvent('FAVORITE_LIST_Container_e12mcay3_ON_TAP');
                                                                                 logFirebaseEvent('Container_bottom_sheet');
                                                                                 await showModalBottomSheet(
@@ -828,8 +826,7 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                                                                   },
                                                                                 ).then((value) => safeSetState(() {}));
                                                                               },
-                                                                              child:
-                                                                              Container(
+                                                                              child: Container(
                                                                                 width: 28.0,
                                                                                 height: 28.0,
                                                                                 decoration: BoxDecoration(
@@ -844,8 +841,7 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                                                                 ),
                                                                               ),
                                                                             ),
-                                                                            if (FFAppConstants
-                                                                                .HideShare)
+                                                                            if (FFAppConstants.HideShare)
                                                                               InkWell(
                                                                                 splashColor: Colors.transparent,
                                                                                 focusColor: Colors.transparent,
@@ -900,7 +896,7 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                                                 ].divide(
                                                                     const SizedBox(
                                                                         height:
-                                                                        8.0)),
+                                                                            8.0)),
                                                               ),
                                                             ),
                                                           ),
@@ -923,22 +919,22 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                     Builder(
                                       builder: (context) {
                                         final prabhupadaList = LaravelGroup
-                                            .likedPostsListCall
-                                            .dataList(
-                                          favoriteListLikedPostsListResponse
-                                              .jsonBody,
-                                        )
-                                            ?.where((e) =>
-                                        functions.jsonToint(
-                                            e, 'post_type_id') ==
-                                            3)
-                                            .toList()
-                                            .toList() ??
+                                                .likedPostsListCall
+                                                .dataList(
+                                                  favoriteListLikedPostsListResponse
+                                                      .jsonBody,
+                                                )
+                                                ?.where((e) =>
+                                                    functions.jsonToint(
+                                                        e, 'post_type_id') ==
+                                                    3)
+                                                .toList()
+                                                .toList() ??
                                             [];
                                         if (prabhupadaList.isEmpty) {
                                           return EmptyWidget();
                                         }
-      
+
                                         return ListView.separated(
                                           padding: EdgeInsets.zero,
                                           scrollDirection: Axis.vertical,
@@ -948,243 +944,241 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                           itemBuilder:
                                               (context, prabhupadaListIndex) {
                                             final prabhupadaListItem =
-                                            prabhupadaList[
-                                            prabhupadaListIndex];
+                                                prabhupadaList[
+                                                    prabhupadaListIndex];
                                             return Padding(
-                                              padding: const EdgeInsetsDirectional
-                                                  .fromSTEB(20.0, 8.0, 20.0, 0.0),
+                                              padding:
+                                                  const EdgeInsetsDirectional
+                                                      .fromSTEB(
+                                                      20.0, 8.0, 20.0, 0.0),
                                               child: Container(
                                                 decoration: BoxDecoration(
                                                   borderRadius:
-                                                  BorderRadius.circular(14.0),
+                                                      BorderRadius.circular(
+                                                          14.0),
                                                 ),
                                                 child: Column(
-                                                  mainAxisSize: MainAxisSize.max,
+                                                  mainAxisSize:
+                                                      MainAxisSize.max,
                                                   children: [
                                                     InkWell(
                                                       splashColor:
-                                                      Colors.transparent,
+                                                          Colors.transparent,
                                                       focusColor:
-                                                      Colors.transparent,
+                                                          Colors.transparent,
                                                       hoverColor:
-                                                      Colors.transparent,
+                                                          Colors.transparent,
                                                       highlightColor:
-                                                      Colors.transparent,
+                                                          Colors.transparent,
                                                       onTap: () async {
-                                                        logFirebaseEvent(
-                                                            'FAVORITE_LIST_PAGE_Row_rfkemift_ON_TAP');
-                                                        logFirebaseEvent(
-                                                            'Row_update_app_state');
-                                                        FFAppState().audioUrl =
-                                                            getJsonField(
-                                                              prabhupadaListItem,
-                                                              r'''$.data''',
-                                                            ).toString();
-                                                        FFAppState()
-                                                            .currentAudioTrack =
-                                                            prabhupadaListItem;
-                                                        FFAppState()
-                                                            .AudioPlayerSongIndex =
-                                                            prabhupadaListIndex;
-                                                        FFAppState()
-                                                            .AudioPlayerList =
-                                                            LaravelGroup
-                                                                .likedPostsListCall
-                                                                .dataList(
-                                                              favoriteListLikedPostsListResponse
-                                                                  .jsonBody,
-                                                            )!
-                                                                .where((e) =>
-                                                            functions
-                                                                .jsonToint(
-                                                                e,
-                                                                'post_type_id') ==
-                                                                3)
-                                                                .toList()
-                                                                .cast<dynamic>();
-                                                        safeSetState(() {});
-                                                        logFirebaseEvent(
-                                                            'Row_navigate_to');
-      
-                                                        playerPlayProcessDebounce(
-                                                          prabhupadaList
-                                                              .map((sObj) => {
-                                                            'id': sObj[
-                                                            "id"]
-                                                                .toString(),
-                                                            'title': sObj[
-                                                            "title"]
-                                                                .toString(),
-                                                            'artist': sObj[
-                                                            "author"]
-                                                                .toString(),
-                                                            'album': sObj[
-                                                            "album"]
-                                                                .toString(),
-                                                            'genre': sObj[
-                                                            "language"]
-                                                                .toString(),
-                                                            'image': sObj[
-                                                            "image"]
-                                                                .toString(),
-                                                            'url': sObj[
-                                                            "data"]
-                                                                .toString(),
-                                                            'user_id': sObj[
-                                                            "artistsId"]
-                                                                .toString(),
-                                                            'user_name': sObj[
-                                                            "artists"]
-                                                                .toString(),
-                                                            'extra': {
-                                                              'json':
-                                                              sObj,
-                                                              'date': sObj[
-                                                              "date"]
-                                                                  .toString(),
-                                                              'country': sObj[
-                                                              "country"]
-                                                                  .toString(),
-                                                              'city': sObj[
-                                                              "city"]
-                                                                  .toString(),
-                                                            },
-                                                          })
-                                                              .toList(),
-                                                          prabhupadaListIndex,
-                                                        );
-                                                        Navigator.push(
-                                                          context,
+                                                        // Open MainPlayerView immediately as a modal overlay
+                                                        Navigator.of(context,
+                                                                rootNavigator:
+                                                                    true)
+                                                            .push(
                                                           PageRouteBuilder(
                                                             opaque: false,
-                                                            pageBuilder: (_, ___,
-                                                                __) =>
-                                                            const MainPlayerView(),
+                                                            pageBuilder: (_, __,
+                                                                    ___) =>
+                                                                const MainPlayerView(),
                                                           ),
                                                         );
-                                                        // context.pushNamed(
-                                                        //   'NowPlayingPage',
-                                                        //   queryParameters: {
-                                                        //     'currentAudio':
-                                                        //         serializeParam(
-                                                        //       prabhupadaListItem,
-                                                        //       ParamType.JSON,
-                                                        //     ),
-                                                        //     'chapters':
-                                                        //         serializeParam(
-                                                        //       LaravelGroup
-                                                        //           .likedPostsListCall
-                                                        //           .dataList(
-                                                        //             favoriteListLikedPostsListResponse
-                                                        //                 .jsonBody,
-                                                        //           )
-                                                        //           ?.where((e) =>
-                                                        //               functions
-                                                        //                   .jsonToint(
-                                                        //                       e,
-                                                        //                       'post_type_id') ==
-                                                        //               3)
-                                                        //           .toList(),
-                                                        //       ParamType.JSON,
-                                                        //       isList: true,
-                                                        //     ),
-                                                        //     'currentAudioIndex':
-                                                        //         serializeParam(
-                                                        //       prabhupadaListIndex,
-                                                        //       ParamType.int,
-                                                        //     ),
-                                                        //   }.withoutNulls,
-                                                        // );
+                                                        final pageManager =
+                                                            GetIt.I<
+                                                                PageManager>();
+                                                        // Immediately show loading spinner in MainPlayer and MiniPlayer
+                                                        pageManager
+                                                            .setLoadingNewAudio(
+                                                                true);
+                                                        pageManager
+                                                                .playButtonNotifier
+                                                                .value =
+                                                            ButtonState.loading;
+                                                        pageManager
+                                                            .currentSongNotifier
+                                                            .value = null;
+                                                        // Immediately stop any currently playing audio
+                                                        await pageManager
+                                                            .audioHandler
+                                                            .stop();
+                                                        // Fetch all URLs in parallel
+                                                        final urls = await Future
+                                                            .wait(prabhupadaList
+                                                                .map((item) =>
+                                                                    getPlayableUrl(
+                                                                        getJsonField(
+                                                                            item,
+                                                                            r'$.data'))));
+                                                        final playlist =
+                                                            <MediaItem>[];
+                                                        for (int i = 0;
+                                                            i <
+                                                                prabhupadaList
+                                                                    .length;
+                                                            i++) {
+                                                          final item =
+                                                              prabhupadaList[i];
+                                                          final url = urls[i];
+                                                          final itemMap = {
+                                                            'id': getJsonField(
+                                                                item, r'$.id'),
+                                                            'album':
+                                                                getJsonField(
+                                                                    item,
+                                                                    r'$.album'),
+                                                            'artist':
+                                                                getJsonField(
+                                                                    item,
+                                                                    r'$.author'),
+                                                            'duration':
+                                                                getJsonField(
+                                                                        item,
+                                                                        r'$.duration') ??
+                                                                    180,
+                                                            'title':
+                                                                getJsonField(
+                                                                    item,
+                                                                    r'$.title'),
+                                                            'image':
+                                                                getJsonField(
+                                                                    item,
+                                                                    r'$.image'),
+                                                            'language':
+                                                                getJsonField(
+                                                                    item,
+                                                                    r'$.language'),
+                                                            'url': url,
+                                                            'user_id': getJsonField(
+                                                                item,
+                                                                r'$.artistsId'),
+                                                            'user_name':
+                                                                getJsonField(
+                                                                    item,
+                                                                    r'$.artists'),
+                                                            'album_id':
+                                                                getJsonField(
+                                                                    item,
+                                                                    r'$.album_id'),
+                                                            'extra': {
+                                                              'json': item,
+                                                              'date':
+                                                                  getJsonField(
+                                                                      item,
+                                                                      r'$.date'),
+                                                              'country':
+                                                                  getJsonField(
+                                                                      item,
+                                                                      r'$.country'),
+                                                              'city':
+                                                                  getJsonField(
+                                                                      item,
+                                                                      r'$.city'),
+                                                            },
+                                                          };
+                                                          playlist.add(
+                                                              await MediaItemConverter
+                                                                  .mapToMediaItem(
+                                                                      itemMap));
+                                                        }
+                                                        await (pageManager
+                                                                    .audioHandler
+                                                                as MyAudioHandler)
+                                                            .setNewPlaylist(
+                                                                playlist,
+                                                                prabhupadaListIndex);
                                                       },
                                                       child: Row(
                                                         mainAxisSize:
-                                                        MainAxisSize.max,
+                                                            MainAxisSize.max,
                                                         children: [
                                                           if (getJsonField(
-                                                            prabhupadaListItem,
-                                                            r'''$.image''',
-                                                          ) !=
+                                                                prabhupadaListItem,
+                                                                r'''$.image''',
+                                                              ) !=
                                                               null)
                                                             ClipRRect(
                                                               borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                                  8.0),
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          8.0),
                                                               child:
-                                                              Image.network(
+                                                                  Image.network(
                                                                 getJsonField(
                                                                   prabhupadaListItem,
                                                                   r'''$.image''',
                                                                 ).toString(),
                                                                 width: 104.0,
                                                                 height: 104.0,
-                                                                fit: BoxFit.cover,
+                                                                fit: BoxFit
+                                                                    .cover,
                                                                 errorBuilder: (context,
-                                                                    error,
-                                                                    stackTrace) =>
+                                                                        error,
+                                                                        stackTrace) =>
                                                                     Image.asset(
-                                                                      'assets/images/error_image.png',
-                                                                      width: 104.0,
-                                                                      height: 104.0,
-                                                                      fit: BoxFit
-                                                                          .cover,
-                                                                    ),
+                                                                  'assets/images/error_image.png',
+                                                                  width: 104.0,
+                                                                  height: 104.0,
+                                                                  fit: BoxFit
+                                                                      .cover,
+                                                                ),
                                                               ),
                                                             ),
                                                           if (getJsonField(
-                                                            prabhupadaListItem,
-                                                            r'''$.image''',
-                                                          ) ==
+                                                                prabhupadaListItem,
+                                                                r'''$.image''',
+                                                              ) ==
                                                               null)
                                                             ClipRRect(
                                                               borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                                  8.0),
-                                                              child: Image.asset(
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          8.0),
+                                                              child:
+                                                                  Image.asset(
                                                                 'assets/images/AboutImage.png',
                                                                 width: 104.0,
                                                                 height: 104.0,
-                                                                fit: BoxFit.cover,
+                                                                fit: BoxFit
+                                                                    .cover,
                                                                 alignment:
-                                                                Alignment(
-                                                                    -1.0,
-                                                                    0.0),
+                                                                    Alignment(
+                                                                        -1.0,
+                                                                        0.0),
                                                               ),
                                                             ),
                                                           Flexible(
                                                             child: Padding(
                                                               padding:
-                                                              EdgeInsetsDirectional
-                                                                  .fromSTEB(
-                                                                  16.0,
-                                                                  0.0,
-                                                                  16.0,
-                                                                  0.0),
+                                                                  EdgeInsetsDirectional
+                                                                      .fromSTEB(
+                                                                          16.0,
+                                                                          0.0,
+                                                                          16.0,
+                                                                          0.0),
                                                               child: Column(
                                                                 mainAxisSize:
-                                                                MainAxisSize
-                                                                    .max,
+                                                                    MainAxisSize
+                                                                        .max,
                                                                 mainAxisAlignment:
-                                                                MainAxisAlignment
-                                                                    .spaceBetween,
+                                                                    MainAxisAlignment
+                                                                        .spaceBetween,
                                                                 crossAxisAlignment:
-                                                                CrossAxisAlignment
-                                                                    .start,
+                                                                    CrossAxisAlignment
+                                                                        .start,
                                                                 children: [
                                                                   SingleChildScrollView(
                                                                     scrollDirection:
-                                                                    Axis.horizontal,
+                                                                        Axis.horizontal,
                                                                     child: Row(
                                                                       mainAxisSize:
-                                                                      MainAxisSize
-                                                                          .max,
+                                                                          MainAxisSize
+                                                                              .max,
                                                                       mainAxisAlignment:
-                                                                      MainAxisAlignment
-                                                                          .spaceBetween,
+                                                                          MainAxisAlignment
+                                                                              .spaceBetween,
                                                                       crossAxisAlignment:
-                                                                      CrossAxisAlignment
-                                                                          .start,
+                                                                          CrossAxisAlignment
+                                                                              .start,
                                                                       children: [
                                                                         Text(
                                                                           getJsonField(
@@ -1194,36 +1188,36 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                                                           style: FlutterFlowTheme.of(context)
                                                                               .bodyMedium
                                                                               .override(
-                                                                            font: GoogleFonts.poppins(
-                                                                              fontWeight: FontWeight.w500,
-                                                                              fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                            ),
-                                                                            color: Color(0xFF232323),
-                                                                            fontSize: 16.0,
-                                                                            letterSpacing: 0.0,
-                                                                            fontWeight: FontWeight.w500,
-                                                                            fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                          ),
+                                                                                font: GoogleFonts.poppins(
+                                                                                  fontWeight: FontWeight.w500,
+                                                                                  fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                ),
+                                                                                color: Color(0xFF232323),
+                                                                                fontSize: 16.0,
+                                                                                letterSpacing: 0.0,
+                                                                                fontWeight: FontWeight.w500,
+                                                                                fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                              ),
                                                                         ),
                                                                       ],
                                                                     ),
                                                                   ),
                                                                   Row(
                                                                     mainAxisSize:
-                                                                    MainAxisSize
-                                                                        .max,
+                                                                        MainAxisSize
+                                                                            .max,
                                                                     mainAxisAlignment:
-                                                                    MainAxisAlignment
-                                                                        .start,
+                                                                        MainAxisAlignment
+                                                                            .start,
                                                                     children: [
                                                                       if (getJsonField(
-                                                                        prabhupadaListItem,
-                                                                        r'''$.shloka_part''',
-                                                                      ) !=
+                                                                            prabhupadaListItem,
+                                                                            r'''$.shloka_part''',
+                                                                          ) !=
                                                                           null)
                                                                         Flexible(
                                                                           child:
-                                                                          Text(
+                                                                              Text(
                                                                             functions.combineTextFromJson(
                                                                                 getJsonField(
                                                                                   prabhupadaListItem,
@@ -1233,42 +1227,40 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                                                                   prabhupadaListItem,
                                                                                   r'''$.shloka_chapter''',
                                                                                 ).toString()),
-                                                                            style: FlutterFlowTheme.of(context)
-                                                                                .bodyMedium
-                                                                                .override(
-                                                                              font: GoogleFonts.poppins(
-                                                                                fontWeight: FontWeight.w500,
-                                                                                fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                              ),
-                                                                              color: FlutterFlowTheme.of(context).backGrey,
-                                                                              fontSize: 13.0,
-                                                                              letterSpacing: 0.0,
-                                                                              fontWeight: FontWeight.w500,
-                                                                              fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                              lineHeight: 1.5,
-                                                                            ),
+                                                                            style: FlutterFlowTheme.of(context).bodyMedium.override(
+                                                                                  font: GoogleFonts.poppins(
+                                                                                    fontWeight: FontWeight.w500,
+                                                                                    fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                  ),
+                                                                                  color: FlutterFlowTheme.of(context).backGrey,
+                                                                                  fontSize: 13.0,
+                                                                                  letterSpacing: 0.0,
+                                                                                  fontWeight: FontWeight.w500,
+                                                                                  fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                  lineHeight: 1.5,
+                                                                                ),
                                                                           ),
                                                                         ),
                                                                       if (getJsonField(
-                                                                        prabhupadaListItem,
-                                                                        r'''$.shloka_part''',
-                                                                      ) !=
+                                                                            prabhupadaListItem,
+                                                                            r'''$.shloka_part''',
+                                                                          ) !=
                                                                           null)
                                                                         SizedBox(
                                                                           height:
-                                                                          16.0,
+                                                                              16.0,
                                                                           child:
-                                                                          VerticalDivider(
+                                                                              VerticalDivider(
                                                                             thickness:
-                                                                            1.0,
+                                                                                1.0,
                                                                             color:
-                                                                            Color(0xFF7ECBC9),
+                                                                                Color(0xFF7ECBC9),
                                                                           ),
                                                                         ),
                                                                       if (getJsonField(
-                                                                        prabhupadaListItem,
-                                                                        r'''$.city''',
-                                                                      ) !=
+                                                                            prabhupadaListItem,
+                                                                            r'''$.city''',
+                                                                          ) !=
                                                                           null)
                                                                         Text(
                                                                           getJsonField(
@@ -1278,43 +1270,43 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                                                           style: FlutterFlowTheme.of(context)
                                                                               .bodyMedium
                                                                               .override(
-                                                                            font: GoogleFonts.poppins(
-                                                                              fontWeight: FontWeight.w500,
-                                                                              fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                            ),
-                                                                            color: FlutterFlowTheme.of(context).backGrey,
-                                                                            fontSize: 13.0,
-                                                                            letterSpacing: 0.0,
-                                                                            fontWeight: FontWeight.w500,
-                                                                            fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                            lineHeight: 1.5,
-                                                                          ),
+                                                                                font: GoogleFonts.poppins(
+                                                                                  fontWeight: FontWeight.w500,
+                                                                                  fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                ),
+                                                                                color: FlutterFlowTheme.of(context).backGrey,
+                                                                                fontSize: 13.0,
+                                                                                letterSpacing: 0.0,
+                                                                                fontWeight: FontWeight.w500,
+                                                                                fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                lineHeight: 1.5,
+                                                                              ),
                                                                         ),
                                                                       if ((getJsonField(
-                                                                        prabhupadaListItem,
-                                                                        r'''$.city''',
-                                                                      ) !=
-                                                                          null) &&
+                                                                                prabhupadaListItem,
+                                                                                r'''$.city''',
+                                                                              ) !=
+                                                                              null) &&
                                                                           (getJsonField(
-                                                                            prabhupadaListItem,
-                                                                            r'''$.date''',
-                                                                          ) !=
+                                                                                prabhupadaListItem,
+                                                                                r'''$.date''',
+                                                                              ) !=
                                                                               null))
                                                                         SizedBox(
                                                                           height:
-                                                                          16.0,
+                                                                              16.0,
                                                                           child:
-                                                                          VerticalDivider(
+                                                                              VerticalDivider(
                                                                             thickness:
-                                                                            1.0,
+                                                                                1.0,
                                                                             color:
-                                                                            Color(0xFF7ECBC9),
+                                                                                Color(0xFF7ECBC9),
                                                                           ),
                                                                         ),
                                                                       if (getJsonField(
-                                                                        prabhupadaListItem,
-                                                                        r'''$.date''',
-                                                                      ) !=
+                                                                            prabhupadaListItem,
+                                                                            r'''$.date''',
+                                                                          ) !=
                                                                           null)
                                                                         Text(
                                                                           valueOrDefault<
@@ -1325,31 +1317,29 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                                                                 prabhupadaListItem,
                                                                                 r'''$.date''',
                                                                               ).toString()),
-                                                                              locale:
-                                                                              FFLocalizations.of(context).languageCode,
+                                                                              locale: FFLocalizations.of(context).languageCode,
                                                                             ),
                                                                             '-',
                                                                           ),
                                                                           style: FlutterFlowTheme.of(context)
                                                                               .bodyMedium
                                                                               .override(
-                                                                            font: GoogleFonts.poppins(
-                                                                              fontWeight: FontWeight.w500,
-                                                                              fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                            ),
-                                                                            color: FlutterFlowTheme.of(context).backGrey,
-                                                                            fontSize: 13.0,
-                                                                            letterSpacing: 0.0,
-                                                                            fontWeight: FontWeight.w500,
-                                                                            fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                            lineHeight: 1.5,
-                                                                          ),
+                                                                                font: GoogleFonts.poppins(
+                                                                                  fontWeight: FontWeight.w500,
+                                                                                  fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                ),
+                                                                                color: FlutterFlowTheme.of(context).backGrey,
+                                                                                fontSize: 13.0,
+                                                                                letterSpacing: 0.0,
+                                                                                fontWeight: FontWeight.w500,
+                                                                                fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                lineHeight: 1.5,
+                                                                              ),
                                                                         ),
                                                                     ],
                                                                   ),
                                                                   Padding(
-                                                                    padding:
-                                                                    const EdgeInsetsDirectional
+                                                                    padding: const EdgeInsetsDirectional
                                                                         .fromSTEB(
                                                                         0.0,
                                                                         8.0,
@@ -1357,37 +1347,35 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                                                         0.0),
                                                                     child: Row(
                                                                       mainAxisSize:
-                                                                      MainAxisSize
-                                                                          .max,
+                                                                          MainAxisSize
+                                                                              .max,
                                                                       mainAxisAlignment:
-                                                                      MainAxisAlignment
-                                                                          .spaceBetween,
+                                                                          MainAxisAlignment
+                                                                              .spaceBetween,
                                                                       children: [
                                                                         Container(
                                                                           decoration:
-                                                                          BoxDecoration(
+                                                                              BoxDecoration(
                                                                             color:
-                                                                            FlutterFlowTheme.of(context).primaryText,
+                                                                                FlutterFlowTheme.of(context).primaryText,
                                                                             borderRadius:
-                                                                            BorderRadius.circular(20.0),
+                                                                                BorderRadius.circular(20.0),
                                                                             shape:
-                                                                            BoxShape.rectangle,
+                                                                                BoxShape.rectangle,
                                                                           ),
                                                                           alignment: AlignmentDirectional(
                                                                               0.0,
                                                                               0.0),
                                                                           child:
-                                                                          Padding(
-                                                                            padding: const EdgeInsetsDirectional
-                                                                                .fromSTEB(
+                                                                              Padding(
+                                                                            padding: const EdgeInsetsDirectional.fromSTEB(
                                                                                 6.0,
                                                                                 3.0,
                                                                                 12.0,
                                                                                 3.0),
                                                                             child:
-                                                                            Row(
-                                                                              mainAxisSize:
-                                                                              MainAxisSize.max,
+                                                                                Row(
+                                                                              mainAxisSize: MainAxisSize.max,
                                                                               children: [
                                                                                 Icon(
                                                                                   Icons.play_arrow,
@@ -1399,16 +1387,16 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                                                                     'rprgngwb' /* Play */,
                                                                                   ),
                                                                                   style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                                                                    font: GoogleFonts.poppins(
-                                                                                      fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
-                                                                                      fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                                    ),
-                                                                                    color: FlutterFlowTheme.of(context).secondaryBackground,
-                                                                                    fontSize: 13.0,
-                                                                                    letterSpacing: 0.0,
-                                                                                    fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
-                                                                                    fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                                  ),
+                                                                                        font: GoogleFonts.poppins(
+                                                                                          fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                                          fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                        ),
+                                                                                        color: FlutterFlowTheme.of(context).secondaryBackground,
+                                                                                        fontSize: 13.0,
+                                                                                        letterSpacing: 0.0,
+                                                                                        fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                                        fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                      ),
                                                                                 ),
                                                                               ],
                                                                             ),
@@ -1416,13 +1404,13 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                                                         ),
                                                                         Flexible(
                                                                           child:
-                                                                          Row(
+                                                                              Row(
                                                                             mainAxisSize:
-                                                                            MainAxisSize.min,
+                                                                                MainAxisSize.min,
                                                                             mainAxisAlignment:
-                                                                            MainAxisAlignment.end,
+                                                                                MainAxisAlignment.end,
                                                                             children:
-                                                                            [
+                                                                                [
                                                                               LikeUnlikeWidget(
                                                                                 key: Key('Keyufx_${prabhupadaListIndex}_of_${prabhupadaList.length}'),
                                                                                 post: prabhupadaListItem,
@@ -1575,7 +1563,7 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                                                 ].divide(
                                                                     const SizedBox(
                                                                         height:
-                                                                        8.0)),
+                                                                            8.0)),
                                                               ),
                                                             ),
                                                           ),
@@ -1598,63 +1586,68 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                     Builder(
                                       builder: (context) {
                                         final videoList = LaravelGroup
-                                            .likedPostsListCall
-                                            .dataList(
-                                          favoriteListLikedPostsListResponse
-                                              .jsonBody,
-                                        )
-                                            ?.where((e) =>
-                                        functions.jsonToint(
-                                            e, 'post_type_id') ==
-                                            7)
-                                            .toList()
-                                            .toList() ??
+                                                .likedPostsListCall
+                                                .dataList(
+                                                  favoriteListLikedPostsListResponse
+                                                      .jsonBody,
+                                                )
+                                                ?.where((e) =>
+                                                    functions.jsonToint(
+                                                        e, 'post_type_id') ==
+                                                    7)
+                                                .toList()
+                                                .toList() ??
                                             [];
                                         if (videoList.isEmpty) {
                                           return EmptyWidget();
                                         }
-      
+
                                         return ListView.separated(
                                           padding: EdgeInsets.zero,
                                           scrollDirection: Axis.vertical,
                                           itemCount: videoList.length,
                                           separatorBuilder: (_, __) =>
                                               SizedBox(height: 8.0),
-                                          itemBuilder: (context, videoListIndex) {
+                                          itemBuilder:
+                                              (context, videoListIndex) {
                                             final videoListItem =
-                                            videoList[videoListIndex];
+                                                videoList[videoListIndex];
                                             return Padding(
-                                              padding: const EdgeInsetsDirectional
-                                                  .fromSTEB(20.0, 8.0, 20.0, 0.0),
+                                              padding:
+                                                  const EdgeInsetsDirectional
+                                                      .fromSTEB(
+                                                      20.0, 8.0, 20.0, 0.0),
                                               child: Container(
                                                 decoration: BoxDecoration(
                                                   borderRadius:
-                                                  BorderRadius.circular(14.0),
+                                                      BorderRadius.circular(
+                                                          14.0),
                                                 ),
                                                 child: Column(
-                                                  mainAxisSize: MainAxisSize.max,
+                                                  mainAxisSize:
+                                                      MainAxisSize.max,
                                                   children: [
                                                     InkWell(
                                                       splashColor:
-                                                      Colors.transparent,
+                                                          Colors.transparent,
                                                       focusColor:
-                                                      Colors.transparent,
+                                                          Colors.transparent,
                                                       hoverColor:
-                                                      Colors.transparent,
+                                                          Colors.transparent,
                                                       highlightColor:
-                                                      Colors.transparent,
+                                                          Colors.transparent,
                                                       onTap: () async {
                                                         logFirebaseEvent(
                                                             'FAVORITE_LIST_PAGE_Row_kr7ns5jn_ON_TAP');
                                                         logFirebaseEvent(
                                                             'Row_navigate_to');
-      
+
                                                         context.pushNamed(
                                                           VideoPostWidget
                                                               .routeName,
                                                           queryParameters: {
                                                             'videoItem':
-                                                            serializeParam(
+                                                                serializeParam(
                                                               videoListItem,
                                                               ParamType.JSON,
                                                             ),
@@ -1663,65 +1656,109 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                                       },
                                                       child: Row(
                                                         mainAxisSize:
-                                                        MainAxisSize.max,
+                                                            MainAxisSize.max,
                                                         children: [
                                                           ClipRRect(
                                                             borderRadius:
-                                                            BorderRadius
-                                                                .circular(
-                                                                8.0),
-                                                            child: Image.network(
-                                                              getJsonField(
-                                                                videoListItem,
-                                                                r'''$.image''',
-                                                              ).toString(),
-                                                              width: 144.0,
-                                                              height: 82.0,
-                                                              fit: BoxFit.cover,
-                                                              errorBuilder: (context,
-                                                                  error,
-                                                                  stackTrace) =>
-                                                                  Image.asset(
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        8.0),
+                                                            child: Builder(
+                                                              builder:
+                                                                  (context) {
+                                                                double
+                                                                    screenWidth =
+                                                                    MediaQuery.of(
+                                                                            context)
+                                                                        .size
+                                                                        .width;
+
+                                                                double
+                                                                    imageWidth;
+                                                                double
+                                                                    imageHeight;
+
+                                                                if (screenWidth <
+                                                                    400) {
+                                                                  imageWidth =
+                                                                      90.0;
+                                                                  imageHeight =
+                                                                      65.0;
+                                                                } else if (screenWidth <
+                                                                    800) {
+                                                                  imageWidth =
+                                                                      100.0;
+                                                                  imageHeight =
+                                                                      72.0;
+                                                                } else {
+                                                                  imageWidth =
+                                                                      114.0;
+                                                                  imageHeight =
+                                                                      82.0;
+                                                                }
+
+                                                                return Image
+                                                                    .network(
+                                                                  getJsonField(
+                                                                          videoListItem,
+                                                                          r'''$.image''')
+                                                                      .toString(),
+                                                                  width:
+                                                                      imageWidth,
+                                                                  height:
+                                                                      imageHeight,
+                                                                  fit: BoxFit
+                                                                      .cover,
+                                                                  errorBuilder: (context,
+                                                                          error,
+                                                                          stackTrace) =>
+                                                                      Image
+                                                                          .asset(
                                                                     'assets/images/error_image.png',
-                                                                    width: 144.0,
-                                                                    height: 82.0,
-                                                                    fit: BoxFit.cover,
+                                                                    width:
+                                                                        imageWidth,
+                                                                    height:
+                                                                        imageHeight,
+                                                                    fit: BoxFit
+                                                                        .cover,
                                                                   ),
+                                                                );
+                                                              },
                                                             ),
                                                           ),
                                                           Flexible(
                                                             child: Padding(
                                                               padding:
-                                                              EdgeInsetsDirectional
-                                                                  .fromSTEB(
-                                                                  16.0,
-                                                                  0.0,
-                                                                  16.0,
-                                                                  0.0),
+                                                                  EdgeInsetsDirectional
+                                                                      .fromSTEB(
+                                                                          16.0,
+                                                                          0.0,
+                                                                          16.0,
+                                                                          0.0),
                                                               child: Column(
                                                                 mainAxisSize:
-                                                                MainAxisSize
-                                                                    .max,
+                                                                    MainAxisSize
+                                                                        .max,
                                                                 mainAxisAlignment:
-                                                                MainAxisAlignment
-                                                                    .spaceBetween,
+                                                                    MainAxisAlignment
+                                                                        .spaceBetween,
                                                                 crossAxisAlignment:
-                                                                CrossAxisAlignment
-                                                                    .start,
+                                                                    CrossAxisAlignment
+                                                                        .start,
                                                                 children: [
                                                                   SingleChildScrollView(
                                                                     scrollDirection:
-                                                                    Axis.horizontal,
+                                                                        Axis.horizontal,
                                                                     child: Row(
                                                                       mainAxisSize:
-                                                                      MainAxisSize
-                                                                          .max,
+                                                                          MainAxisSize
+                                                                              .max,
                                                                       mainAxisAlignment:
-                                                                      MainAxisAlignment
-                                                                          .spaceBetween,
+                                                                          MainAxisAlignment
+                                                                              .spaceBetween,
                                                                       crossAxisAlignment:
-                                                                      CrossAxisAlignment
-                                                                          .start,
+                                                                          CrossAxisAlignment
+                                                                              .start,
                                                                       children: [
                                                                         Text(
                                                                           getJsonField(
@@ -1731,23 +1768,22 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                                                           style: FlutterFlowTheme.of(context)
                                                                               .bodyMedium
                                                                               .override(
-                                                                            font: GoogleFonts.poppins(
-                                                                              fontWeight: FontWeight.w500,
-                                                                              fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                            ),
-                                                                            color: Color(0xFF232323),
-                                                                            fontSize: 16.0,
-                                                                            letterSpacing: 0.0,
-                                                                            fontWeight: FontWeight.w500,
-                                                                            fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                          ),
+                                                                                font: GoogleFonts.poppins(
+                                                                                  fontWeight: FontWeight.w500,
+                                                                                  fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                ),
+                                                                                color: Color(0xFF232323),
+                                                                                fontSize: 16.0,
+                                                                                letterSpacing: 0.0,
+                                                                                fontWeight: FontWeight.w500,
+                                                                                fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                              ),
                                                                         ),
                                                                       ],
                                                                     ),
                                                                   ),
                                                                   Padding(
-                                                                    padding:
-                                                                    const EdgeInsetsDirectional
+                                                                    padding: const EdgeInsetsDirectional
                                                                         .fromSTEB(
                                                                         0.0,
                                                                         8.0,
@@ -1755,37 +1791,35 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                                                         0.0),
                                                                     child: Row(
                                                                       mainAxisSize:
-                                                                      MainAxisSize
-                                                                          .max,
+                                                                          MainAxisSize
+                                                                              .max,
                                                                       mainAxisAlignment:
-                                                                      MainAxisAlignment
-                                                                          .spaceBetween,
+                                                                          MainAxisAlignment
+                                                                              .spaceBetween,
                                                                       children: [
                                                                         Container(
                                                                           decoration:
-                                                                          BoxDecoration(
+                                                                              BoxDecoration(
                                                                             color:
-                                                                            FlutterFlowTheme.of(context).primaryText,
+                                                                                FlutterFlowTheme.of(context).primaryText,
                                                                             borderRadius:
-                                                                            BorderRadius.circular(20.0),
+                                                                                BorderRadius.circular(20.0),
                                                                             shape:
-                                                                            BoxShape.rectangle,
+                                                                                BoxShape.rectangle,
                                                                           ),
                                                                           alignment: AlignmentDirectional(
                                                                               0.0,
                                                                               0.0),
                                                                           child:
-                                                                          Padding(
-                                                                            padding: const EdgeInsetsDirectional
-                                                                                .fromSTEB(
+                                                                              Padding(
+                                                                            padding: const EdgeInsetsDirectional.fromSTEB(
                                                                                 6.0,
                                                                                 3.0,
                                                                                 12.0,
                                                                                 3.0),
                                                                             child:
-                                                                            Row(
-                                                                              mainAxisSize:
-                                                                              MainAxisSize.max,
+                                                                                Row(
+                                                                              mainAxisSize: MainAxisSize.max,
                                                                               children: [
                                                                                 Icon(
                                                                                   Icons.play_arrow,
@@ -1797,16 +1831,16 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                                                                     '7vzdv83f' /* Play */,
                                                                                   ),
                                                                                   style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                                                                    font: GoogleFonts.poppins(
-                                                                                      fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
-                                                                                      fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                                    ),
-                                                                                    color: FlutterFlowTheme.of(context).secondaryBackground,
-                                                                                    fontSize: 13.0,
-                                                                                    letterSpacing: 0.0,
-                                                                                    fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
-                                                                                    fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                                  ),
+                                                                                        font: GoogleFonts.poppins(
+                                                                                          fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                                          fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                        ),
+                                                                                        color: FlutterFlowTheme.of(context).secondaryBackground,
+                                                                                        fontSize: 13.0,
+                                                                                        letterSpacing: 0.0,
+                                                                                        fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                                        fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                      ),
                                                                                 ),
                                                                               ],
                                                                             ),
@@ -1814,28 +1848,21 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                                                         ),
                                                                         Row(
                                                                           mainAxisSize:
-                                                                          MainAxisSize.max,
+                                                                              MainAxisSize.max,
                                                                           mainAxisAlignment:
-                                                                          MainAxisAlignment.end,
+                                                                              MainAxisAlignment.end,
                                                                           children:
-                                                                          [
+                                                                              [
                                                                             LikeUnlikeWidget(
-                                                                              key:
-                                                                              Key('Keyxi9_${videoListIndex}_of_${videoList.length}'),
-                                                                              post:
-                                                                              videoListItem,
+                                                                              key: Key('Keyxi9_${videoListIndex}_of_${videoList.length}'),
+                                                                              post: videoListItem,
                                                                             ),
                                                                             InkWell(
-                                                                              splashColor:
-                                                                              Colors.transparent,
-                                                                              focusColor:
-                                                                              Colors.transparent,
-                                                                              hoverColor:
-                                                                              Colors.transparent,
-                                                                              highlightColor:
-                                                                              Colors.transparent,
-                                                                              onTap:
-                                                                                  () async {
+                                                                              splashColor: Colors.transparent,
+                                                                              focusColor: Colors.transparent,
+                                                                              hoverColor: Colors.transparent,
+                                                                              highlightColor: Colors.transparent,
+                                                                              onTap: () async {
                                                                                 logFirebaseEvent('FAVORITE_LIST_Container_13vjluyy_ON_TAP');
                                                                                 logFirebaseEvent('Container_bottom_sheet');
                                                                                 await showModalBottomSheet(
@@ -1861,8 +1888,7 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                                                                   },
                                                                                 ).then((value) => safeSetState(() {}));
                                                                               },
-                                                                              child:
-                                                                              Container(
+                                                                              child: Container(
                                                                                 width: 28.0,
                                                                                 height: 28.0,
                                                                                 decoration: BoxDecoration(
@@ -1878,16 +1904,11 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                                                               ),
                                                                             ),
                                                                             InkWell(
-                                                                              splashColor:
-                                                                              Colors.transparent,
-                                                                              focusColor:
-                                                                              Colors.transparent,
-                                                                              hoverColor:
-                                                                              Colors.transparent,
-                                                                              highlightColor:
-                                                                              Colors.transparent,
-                                                                              onTap:
-                                                                                  () async {
+                                                                              splashColor: Colors.transparent,
+                                                                              focusColor: Colors.transparent,
+                                                                              hoverColor: Colors.transparent,
+                                                                              highlightColor: Colors.transparent,
+                                                                              onTap: () async {
                                                                                 logFirebaseEvent('FAVORITE_LIST_Container_3lhfrnor_ON_TAP');
                                                                                 logFirebaseEvent('Container_bottom_sheet');
                                                                                 await showModalBottomSheet(
@@ -1913,8 +1934,7 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                                                                   },
                                                                                 ).then((value) => safeSetState(() {}));
                                                                               },
-                                                                              child:
-                                                                              Container(
+                                                                              child: Container(
                                                                                 width: 28.0,
                                                                                 height: 28.0,
                                                                                 decoration: BoxDecoration(
@@ -1929,8 +1949,7 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                                                                 ),
                                                                               ),
                                                                             ),
-                                                                            if (FFAppConstants
-                                                                                .HideShare)
+                                                                            if (FFAppConstants.HideShare)
                                                                               Builder(
                                                                                 builder: (context) => InkWell(
                                                                                   splashColor: Colors.transparent,
@@ -1987,7 +2006,7 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                                                 ].divide(
                                                                     const SizedBox(
                                                                         height:
-                                                                        8.0)),
+                                                                            8.0)),
                                                               ),
                                                             ),
                                                           ),
@@ -2013,22 +2032,22 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                       child: Builder(
                                         builder: (context) {
                                           final news = LaravelGroup
-                                              .likedPostsListCall
-                                              .dataList(
-                                            favoriteListLikedPostsListResponse
-                                                .jsonBody,
-                                          )
-                                              ?.where((e) =>
-                                          functions.jsonToint(
-                                              e, 'post_type_id') ==
-                                              13)
-                                              .toList()
-                                              .toList() ??
+                                                  .likedPostsListCall
+                                                  .dataList(
+                                                    favoriteListLikedPostsListResponse
+                                                        .jsonBody,
+                                                  )
+                                                  ?.where((e) =>
+                                                      functions.jsonToint(
+                                                          e, 'post_type_id') ==
+                                                      13)
+                                                  .toList()
+                                                  .toList() ??
                                               [];
                                           if (news.isEmpty) {
                                             return EmptyWidget();
                                           }
-      
+
                                           return ListView.builder(
                                             padding: EdgeInsets.zero,
                                             shrinkWrap: true,
@@ -2041,27 +2060,28 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                                 child: Padding(
                                                   padding: EdgeInsetsDirectional
                                                       .fromSTEB(
-                                                      4.0, 0.0, 0.0, 0.0),
+                                                          4.0, 0.0, 0.0, 0.0),
                                                   child: InkWell(
                                                     splashColor:
-                                                    Colors.transparent,
+                                                        Colors.transparent,
                                                     focusColor:
-                                                    Colors.transparent,
+                                                        Colors.transparent,
                                                     hoverColor:
-                                                    Colors.transparent,
+                                                        Colors.transparent,
                                                     highlightColor:
-                                                    Colors.transparent,
+                                                        Colors.transparent,
                                                     onTap: () async {
                                                       logFirebaseEvent(
                                                           'FAVORITE_LIST_PAGE_Row_gdytufkt_ON_TAP');
                                                       logFirebaseEvent(
                                                           'Row_navigate_to');
-      
+
                                                       context.pushNamed(
-                                                        BlogPostWidget.routeName,
+                                                        BlogPostWidget
+                                                            .routeName,
                                                         queryParameters: {
                                                           'blogPost':
-                                                          serializeParam(
+                                                              serializeParam(
                                                             newsItem,
                                                             ParamType.JSON,
                                                           ),
@@ -2070,12 +2090,13 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                                     },
                                                     child: Row(
                                                       mainAxisSize:
-                                                      MainAxisSize.max,
+                                                          MainAxisSize.max,
                                                       children: [
                                                         ClipRRect(
                                                           borderRadius:
-                                                          BorderRadius
-                                                              .circular(8.0),
+                                                              BorderRadius
+                                                                  .circular(
+                                                                      8.0),
                                                           child: Image.network(
                                                             getJsonField(
                                                               newsItem,
@@ -2084,55 +2105,57 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                                             width: 80.0,
                                                             height: 80.0,
                                                             fit: BoxFit.cover,
-                                                            alignment: Alignment(
-                                                                -1.0, 0.0),
+                                                            alignment:
+                                                                Alignment(
+                                                                    -1.0, 0.0),
                                                             errorBuilder: (context,
-                                                                error,
-                                                                stackTrace) =>
+                                                                    error,
+                                                                    stackTrace) =>
                                                                 Image.asset(
-                                                                  'assets/images/error_image.png',
-                                                                  width: 80.0,
-                                                                  height: 80.0,
-                                                                  fit: BoxFit.cover,
-                                                                  alignment:
+                                                              'assets/images/error_image.png',
+                                                              width: 80.0,
+                                                              height: 80.0,
+                                                              fit: BoxFit.cover,
+                                                              alignment:
                                                                   Alignment(
-                                                                      -1.0, 0.0),
-                                                                ),
+                                                                      -1.0,
+                                                                      0.0),
+                                                            ),
                                                           ),
                                                         ),
                                                         Flexible(
                                                           child: Padding(
                                                             padding:
-                                                            EdgeInsetsDirectional
-                                                                .fromSTEB(
-                                                                16.0,
-                                                                0.0,
-                                                                16.0,
-                                                                0.0),
+                                                                EdgeInsetsDirectional
+                                                                    .fromSTEB(
+                                                                        16.0,
+                                                                        0.0,
+                                                                        16.0,
+                                                                        0.0),
                                                             child: Column(
                                                               mainAxisSize:
-                                                              MainAxisSize
-                                                                  .max,
+                                                                  MainAxisSize
+                                                                      .max,
                                                               mainAxisAlignment:
-                                                              MainAxisAlignment
-                                                                  .spaceBetween,
+                                                                  MainAxisAlignment
+                                                                      .spaceBetween,
                                                               crossAxisAlignment:
-                                                              CrossAxisAlignment
-                                                                  .start,
+                                                                  CrossAxisAlignment
+                                                                      .start,
                                                               children: [
                                                                 SingleChildScrollView(
                                                                   scrollDirection:
-                                                                  Axis.horizontal,
+                                                                      Axis.horizontal,
                                                                   child: Row(
                                                                     mainAxisSize:
-                                                                    MainAxisSize
-                                                                        .max,
+                                                                        MainAxisSize
+                                                                            .max,
                                                                     mainAxisAlignment:
-                                                                    MainAxisAlignment
-                                                                        .spaceBetween,
+                                                                        MainAxisAlignment
+                                                                            .spaceBetween,
                                                                     crossAxisAlignment:
-                                                                    CrossAxisAlignment
-                                                                        .start,
+                                                                        CrossAxisAlignment
+                                                                            .start,
                                                                     children: [
                                                                       Padding(
                                                                         padding: EdgeInsetsDirectional.fromSTEB(
@@ -2141,7 +2164,7 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                                                             12.0,
                                                                             0.0),
                                                                         child:
-                                                                        Text(
+                                                                            Text(
                                                                           getJsonField(
                                                                             newsItem,
                                                                             r'''$.title''',
@@ -2149,16 +2172,16 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                                                           style: FlutterFlowTheme.of(context)
                                                                               .bodyMedium
                                                                               .override(
-                                                                            font: GoogleFonts.poppins(
-                                                                              fontWeight: FontWeight.w600,
-                                                                              fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                            ),
-                                                                            color: Color(0xFF232323),
-                                                                            fontSize: 18.0,
-                                                                            letterSpacing: 0.0,
-                                                                            fontWeight: FontWeight.w600,
-                                                                            fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                          ),
+                                                                                font: GoogleFonts.poppins(
+                                                                                  fontWeight: FontWeight.w600,
+                                                                                  fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                                ),
+                                                                                color: Color(0xFF232323),
+                                                                                fontSize: 18.0,
+                                                                                letterSpacing: 0.0,
+                                                                                fontWeight: FontWeight.w600,
+                                                                                fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                              ),
                                                                         ),
                                                                       ),
                                                                     ],
@@ -2166,47 +2189,41 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                                                 ),
                                                                 Row(
                                                                   mainAxisSize:
-                                                                  MainAxisSize
-                                                                      .max,
+                                                                      MainAxisSize
+                                                                          .max,
                                                                   mainAxisAlignment:
-                                                                  MainAxisAlignment
-                                                                      .start,
+                                                                      MainAxisAlignment
+                                                                          .start,
                                                                   children: [
                                                                     Flexible(
-                                                                      child: Text(
+                                                                      child:
+                                                                          Text(
                                                                         getJsonField(
                                                                           newsItem,
                                                                           r'''$.author''',
                                                                         ).toString(),
-                                                                        style: FlutterFlowTheme.of(
-                                                                            context)
+                                                                        style: FlutterFlowTheme.of(context)
                                                                             .bodyLarge
                                                                             .override(
-                                                                          font:
-                                                                          GoogleFonts.poppins(
-                                                                            fontWeight: FlutterFlowTheme.of(context).bodyLarge.fontWeight,
-                                                                            fontStyle: FlutterFlowTheme.of(context).bodyLarge.fontStyle,
-                                                                          ),
-                                                                          color:
-                                                                          FlutterFlowTheme.of(context).primaryText,
-                                                                          fontSize:
-                                                                          14.0,
-                                                                          letterSpacing:
-                                                                          0.0,
-                                                                          fontWeight:
-                                                                          FlutterFlowTheme.of(context).bodyLarge.fontWeight,
-                                                                          fontStyle:
-                                                                          FlutterFlowTheme.of(context).bodyLarge.fontStyle,
-                                                                        ),
+                                                                              font: GoogleFonts.poppins(
+                                                                                fontWeight: FlutterFlowTheme.of(context).bodyLarge.fontWeight,
+                                                                                fontStyle: FlutterFlowTheme.of(context).bodyLarge.fontStyle,
+                                                                              ),
+                                                                              color: FlutterFlowTheme.of(context).primaryText,
+                                                                              fontSize: 14.0,
+                                                                              letterSpacing: 0.0,
+                                                                              fontWeight: FlutterFlowTheme.of(context).bodyLarge.fontWeight,
+                                                                              fontStyle: FlutterFlowTheme.of(context).bodyLarge.fontStyle,
+                                                                            ),
                                                                       ),
                                                                     ),
                                                                     SizedBox(
                                                                       height:
-                                                                      25.0,
+                                                                          25.0,
                                                                       child:
-                                                                      VerticalDivider(
+                                                                          VerticalDivider(
                                                                         thickness:
-                                                                        1.0,
+                                                                            1.0,
                                                                         color: Color(
                                                                             0xFF7ECBC9),
                                                                       ),
@@ -2222,53 +2239,49 @@ class _FavoriteListWidgetState extends State<FavoriteListWidget>
                                                                             r'''$.date''',
                                                                           ).toString()),
                                                                           locale:
-                                                                          FFLocalizations.of(context).languageCode,
+                                                                              FFLocalizations.of(context).languageCode,
                                                                         ),
                                                                         '-',
                                                                       ),
                                                                       style: FlutterFlowTheme.of(
-                                                                          context)
+                                                                              context)
                                                                           .bodyMedium
                                                                           .override(
-                                                                        font:
-                                                                        GoogleFonts.poppins(
-                                                                          fontWeight:
-                                                                          FlutterFlowTheme.of(context).bodyMedium.fontWeight,
-                                                                          fontStyle:
-                                                                          FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                                                                        ),
-                                                                        color:
-                                                                        FlutterFlowTheme.of(context).backGrey,
-                                                                        fontSize:
-                                                                        14.0,
-                                                                        letterSpacing:
-                                                                        0.0,
-                                                                        fontWeight: FlutterFlowTheme.of(context)
-                                                                            .bodyMedium
-                                                                            .fontWeight,
-                                                                        fontStyle: FlutterFlowTheme.of(context)
-                                                                            .bodyMedium
-                                                                            .fontStyle,
-                                                                      ),
+                                                                            font:
+                                                                                GoogleFonts.poppins(
+                                                                              fontWeight: FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                              fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                            ),
+                                                                            color:
+                                                                                FlutterFlowTheme.of(context).backGrey,
+                                                                            fontSize:
+                                                                                14.0,
+                                                                            letterSpacing:
+                                                                                0.0,
+                                                                            fontWeight:
+                                                                                FlutterFlowTheme.of(context).bodyMedium.fontWeight,
+                                                                            fontStyle:
+                                                                                FlutterFlowTheme.of(context).bodyMedium.fontStyle,
+                                                                          ),
                                                                     ),
                                                                     SizedBox(
                                                                       height:
-                                                                      25.0,
+                                                                          25.0,
                                                                       child:
-                                                                      VerticalDivider(
+                                                                          VerticalDivider(
                                                                         thickness:
-                                                                        1.0,
+                                                                            1.0,
                                                                         color: Color(
                                                                             0xFF7ECBC9),
                                                                       ),
                                                                     ),
                                                                     Flexible(
                                                                       child:
-                                                                      LikeUnlikeWidget(
+                                                                          LikeUnlikeWidget(
                                                                         key: Key(
                                                                             'Keyp0k_${newsIndex}_of_${news.length}'),
                                                                         post:
-                                                                        newsItem,
+                                                                            newsItem,
                                                                       ),
                                                                     ),
                                                                   ],

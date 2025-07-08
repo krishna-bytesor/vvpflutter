@@ -270,6 +270,10 @@ class MyAudioHandler extends BaseAudioHandler implements AudioPlayerHandler {
   @override
   Future<void> stop() async {
     await player.stop();
+    // Clear playlist and queue to fully reset
+    await playlist.clear();
+    queue.add([]);
+    mediaItem.add(null);
     playbackState.add(playbackState.value
         .copyWith(processingState: AudioProcessingState.idle));
     return super.stop();
@@ -286,7 +290,8 @@ class MyAudioHandler extends BaseAudioHandler implements AudioPlayerHandler {
   }
 
   @override
-  Future<void> setNewPlaylist(List<MediaItem> mediaItems, int index) async {
+  Future<void> setNewPlaylist(List<MediaItem> mediaItems, int index,
+      {bool autoplay = true}) async {
     if (!Platform.isAndroid) {
       await player.stop();
     }
@@ -299,6 +304,8 @@ class MyAudioHandler extends BaseAudioHandler implements AudioPlayerHandler {
     queue.add(newQueue);
     await player.setAudioSource(playlist,
         initialIndex: index, initialPosition: Duration.zero);
-    await player.play();
+    if (autoplay) {
+      await player.play();
+    }
   }
 }

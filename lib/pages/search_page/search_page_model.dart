@@ -60,6 +60,9 @@ class SearchPageModel extends FlutterFlowModel<SearchPageWidget> {
   void clearCategoryCacheKey(String? uniqueKey) =>
       _categoryManager.clearRequest(uniqueKey);
 
+  /// Loading guard for audio play button to prevent double-tap issues
+  bool isAudioPlayLoading = false;
+
   @override
   void initState(BuildContext context) {
     bottomNavBarModel = createModel(context, () => BottomNavBarModel());
@@ -146,15 +149,15 @@ class SearchPageModel extends FlutterFlowModel<SearchPageWidget> {
   }
 
   PagingController<ApiPagingParams, dynamic> setAudiController(
-      Function(ApiPagingParams) apiCall,
-      ) {
+    Function(ApiPagingParams) apiCall,
+  ) {
     audiApiCall = apiCall;
     return audiPagingController ??= _createAudiController(apiCall);
   }
 
   PagingController<ApiPagingParams, dynamic> _createAudiController(
-      Function(ApiPagingParams) query,
-      ) {
+    Function(ApiPagingParams) query,
+  ) {
     final controller = PagingController<ApiPagingParams, dynamic>(
       firstPageKey: ApiPagingParams(
         nextPageNumber: 0,
@@ -168,36 +171,36 @@ class SearchPageModel extends FlutterFlowModel<SearchPageWidget> {
   void audiSearchPostPage(ApiPagingParams nextPageMarker) =>
       audiApiCall!(nextPageMarker).then((audiSearchPostResponse) {
         final pageItems = (LaravelGroup.searchPostCall
-            .dataList(
-          audiSearchPostResponse.jsonBody,
-        )!
-            .where((e) => functions.jsonToint(e, 'post_type_id') == 1)
-            .toList() ??
-            [])
+                    .dataList(
+                      audiSearchPostResponse.jsonBody,
+                    )!
+                    .where((e) => functions.jsonToint(e, 'post_type_id') == 1)
+                    .toList() ??
+                [])
             .toList();
         final newNumItems = nextPageMarker.numItems + pageItems.length;
         audiPagingController?.appendPage(
           pageItems,
           (pageItems.length > 0)
               ? ApiPagingParams(
-            nextPageNumber: nextPageMarker.nextPageNumber + 1,
-            numItems: newNumItems,
-            lastResponse: audiSearchPostResponse,
-          )
+                  nextPageNumber: nextPageMarker.nextPageNumber + 1,
+                  numItems: newNumItems,
+                  lastResponse: audiSearchPostResponse,
+                )
               : null,
         );
       });
 
   PagingController<ApiPagingParams, dynamic> setPrabhupadController(
-      Function(ApiPagingParams) apiCall,
-      ) {
+    Function(ApiPagingParams) apiCall,
+  ) {
     prabhupadApiCall = apiCall;
     return prabhupadPagingController ??= _createPrabhupadController(apiCall);
   }
 
   PagingController<ApiPagingParams, dynamic> _createPrabhupadController(
-      Function(ApiPagingParams) query,
-      ) {
+    Function(ApiPagingParams) query,
+  ) {
     final controller = PagingController<ApiPagingParams, dynamic>(
       firstPageKey: ApiPagingParams(
         nextPageNumber: 0,
@@ -211,36 +214,36 @@ class SearchPageModel extends FlutterFlowModel<SearchPageWidget> {
   void prabhupadSearchPostPage(ApiPagingParams nextPageMarker) =>
       prabhupadApiCall!(nextPageMarker).then((prabhupadSearchPostResponse) {
         final pageItems = (LaravelGroup.searchPostCall
-            .dataList(
-          prabhupadSearchPostResponse.jsonBody,
-        )!
-            .where((e) => functions.jsonToint(e, 'post_type_id') == 3)
-            .toList() ??
-            [])
+                    .dataList(
+                      prabhupadSearchPostResponse.jsonBody,
+                    )!
+                    .where((e) => functions.jsonToint(e, 'post_type_id') == 3)
+                    .toList() ??
+                [])
             .toList();
         final newNumItems = nextPageMarker.numItems + pageItems.length;
         prabhupadPagingController?.appendPage(
           pageItems,
           (pageItems.length > 0)
               ? ApiPagingParams(
-            nextPageNumber: nextPageMarker.nextPageNumber + 1,
-            numItems: newNumItems,
-            lastResponse: prabhupadSearchPostResponse,
-          )
+                  nextPageNumber: nextPageMarker.nextPageNumber + 1,
+                  numItems: newNumItems,
+                  lastResponse: prabhupadSearchPostResponse,
+                )
               : null,
         );
       });
 
   PagingController<ApiPagingParams, dynamic> setVideosController(
-      Function(ApiPagingParams) apiCall,
-      ) {
+    Function(ApiPagingParams) apiCall,
+  ) {
     videosApiCall = apiCall;
     return videosPagingController ??= _createVideosController(apiCall);
   }
 
   PagingController<ApiPagingParams, dynamic> _createVideosController(
-      Function(ApiPagingParams) query,
-      ) {
+    Function(ApiPagingParams) query,
+  ) {
     final controller = PagingController<ApiPagingParams, dynamic>(
       firstPageKey: ApiPagingParams(
         nextPageNumber: 0,
@@ -254,22 +257,22 @@ class SearchPageModel extends FlutterFlowModel<SearchPageWidget> {
   void videosSearchPostPage(ApiPagingParams nextPageMarker) =>
       videosApiCall!(nextPageMarker).then((videosSearchPostResponse) {
         final pageItems = (LaravelGroup.searchPostCall
-            .dataList(
-          videosSearchPostResponse.jsonBody,
-        )!
-            .where((e) => functions.jsonToint(e, 'post_type_id') == 7)
-            .toList() ??
-            [])
+                    .dataList(
+                      videosSearchPostResponse.jsonBody,
+                    )!
+                    .where((e) => functions.jsonToint(e, 'post_type_id') == 7)
+                    .toList() ??
+                [])
             .toList();
         final newNumItems = nextPageMarker.numItems + pageItems.length;
         videosPagingController?.appendPage(
           pageItems,
           (pageItems.length > 0)
               ? ApiPagingParams(
-            nextPageNumber: nextPageMarker.nextPageNumber + 1,
-            numItems: newNumItems,
-            lastResponse: videosSearchPostResponse,
-          )
+                  nextPageNumber: nextPageMarker.nextPageNumber + 1,
+                  numItems: newNumItems,
+                  lastResponse: videosSearchPostResponse,
+                )
               : null,
         );
       });
